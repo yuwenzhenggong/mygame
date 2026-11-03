@@ -1,0 +1,44 @@
+# Unity
+[Ll]ibrary/
+[Tt]emp/
+[Oo]bj/
+[Bb]uild/
+[Bb]uilds/
+[Ll]ogs/
+[Uu]ser[Ss]ettings/
+[Mm]emoryCaptures/
+[Rr]ecordings/
+
+# 自动生成的工程文件
+*.csproj
+*.unityproj
+*.sln
+*.suo
+*.user
+*.userprefs
+*.pidb
+*.booproj
+*.svd
+*.pdb
+*.mdb
+*.opendb
+*.VC.db
+
+# IDE
+.vs/
+.idea/
+.vscode/
+*.VS.*
+
+# OS
+.DS_Store
+Thumbs.db
+
+# 构建产物
+*.apk
+*.aab
+*.unitypackage
+
+# 我自己加的临时文件
+unity-run.log
+unity-batch.log

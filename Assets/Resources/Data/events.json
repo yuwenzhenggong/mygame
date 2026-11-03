@@ -1,0 +1,188 @@
+{
+  "events": [
+    {
+      "id": "e_old_man",
+      "title": "山道老者",
+      "text": "山道旁坐着一位衣衫褴褛的老者，面前摆着一只破碗。他抬头看你，目光却不像乞丐。",
+      "weight": 12,
+      "options": [
+        {
+          "text": "施舍灵石",
+          "resultText": "老者收下灵石，随手在你掌心点了一下，一股热流窜入经脉。",
+          "effects": [
+            { "type": "stat", "key": "spiritStones", "value": -5 },
+            { "type": "stat", "key": "cultivation", "value": 40 }
+          ]
+        },
+        {
+          "text": "视而不见",
+          "resultText": "你从他身边走过。身后传来一声轻笑。",
+          "effects": []
+        },
+        {
+          "text": "问其来历",
+          "resultText": "老者摇头不答，只在你眉心一点：「记着，莫要急。」你心头一震。",
+          "effects": [
+            { "type": "flag", "key": "met_old_man", "value": 1 },
+            { "type": "stat", "key": "cultivation", "value": 15 }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "e_herb",
+      "title": "灵草",
+      "text": "崖壁缝隙里长着一株泛着微光的灵草，四周带着淡淡的腥气。",
+      "weight": 15,
+      "options": [
+        {
+          "text": "小心采摘",
+          "resultText": "你屏住呼吸摘下灵草，卖与坊市，得灵石若干。",
+          "effects": [
+            { "type": "stat", "key": "spiritStones", "value": 18 }
+          ]
+        },
+        {
+          "text": "直接吞服",
+          "resultText": "药力在体内炸开，你难受了半日，却也化开不少。",
+          "effects": [
+            { "type": "stat", "key": "cultivation", "value": 55 },
+            { "type": "stat", "key": "hp", "value": -20 }
+          ]
+        },
+        {
+          "text": "留给后来人",
+          "resultText": "你转身离开。山风拂过，心底倒有几分轻快。",
+          "effects": [
+            { "type": "stat", "key": "cultivation", "value": 10 }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "e_beast",
+      "title": "林中妖兽",
+      "text": "一头通体漆黑的山魈拦住去路，喉咙里滚出低吼。",
+      "weight": 18,
+      "options": [
+        {
+          "text": "拔剑迎战",
+          "resultText": "一场恶斗，你身上多了几道血口，却也摸到几分搏杀的窍门。",
+          "effects": [
+            { "type": "stat", "key": "hp", "value": -35 },
+            { "type": "stat", "key": "cultivation", "value": 70 }
+          ]
+        },
+        {
+          "text": "绕道而行",
+          "resultText": "你绕了个大圈，多走了半日路。",
+          "effects": []
+        }
+      ]
+    },
+    {
+      "id": "e_rob",
+      "title": "劫修",
+      "text": "两名蒙面修士从林间窜出，堵住了你的去路。",
+      "weight": 14,
+      "require": {
+        "minSpiritStones": 20
+      },
+      "options": [
+        {
+          "text": "交出灵石",
+          "resultText": "你把袋子丢过去，两人掂了掂，散了。",
+          "effects": [
+            { "type": "stat", "key": "spiritStones", "value": -20 }
+          ]
+        },
+        {
+          "text": "拼死一搏",
+          "resultText": "你以伤势换了个惨胜，抢回了自己的灵石。",
+          "effects": [
+            { "type": "stat", "key": "hp", "value": -45 },
+            { "type": "stat", "key": "cultivation", "value": 60 }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "e_market",
+      "title": "坊市",
+      "text": "坊市人声鼎沸，摊贩们吆喝着各种来路不明的东西。",
+      "weight": 14,
+      "require": {
+        "minSpiritStones": 30
+      },
+      "options": [
+        {
+          "text": "买一册无名功法（30 灵石）",
+          "resultText": "摊主笑得意味深长。你翻开册子，倒真有几分道理。",
+          "effects": [
+            { "type": "learn", "key": "t_sword" },
+            { "type": "stat", "key": "spiritStones", "value": -30 }
+          ]
+        },
+        {
+          "text": "只逛逛",
+          "resultText": "你在坊市里转了一圈，听来不少传闻。",
+          "effects": []
+        }
+      ]
+    },
+    {
+      "id": "e_cave",
+      "title": "废弃洞府",
+      "text": "山腹深处有一处半塌的洞府，石壁上刻着残破的符文。",
+      "weight": 6,
+      "onceOnly": true,
+      "require": {
+        "minRealm": 1
+      },
+      "options": [
+        {
+          "text": "参悟石壁",
+          "resultText": "三日三夜，你于符文间悟出一门护体功法。",
+          "effects": [
+            { "type": "learn", "key": "t_iron_body" }
+          ]
+        },
+        {
+          "text": "搜寻遗物",
+          "resultText": "你在石台暗格里找到一小袋灵石。",
+          "effects": [
+            { "type": "stat", "key": "spiritStones", "value": 60 }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "e_inheritance",
+      "title": "前辈传承",
+      "text": "一位自称来自上界的女修拦下你：「你的根骨，我认得。」",
+      "weight": 8,
+      "onceOnly": true,
+      "require": {
+        "minRealm": 2,
+        "hasFlag": "met_old_man"
+      },
+      "options": [
+        {
+          "text": "跪下拜师",
+          "resultText": "她抬手虚扶：「不必跪。我只借你一缕气运。」你的功法豁然贯通。",
+          "effects": [
+            { "type": "learn", "key": "t_heaven" },
+            { "type": "stat", "key": "cultivation", "value": 200 }
+          ]
+        },
+        {
+          "text": "婉言谢绝",
+          "resultText": "她怔了一下，随即笑了：「倒是个有主意的。罢了。」",
+          "effects": [
+            { "type": "stat", "key": "cultivation", "value": 30 }
+          ]
+        }
+      ]
+    }
+  ]
+}

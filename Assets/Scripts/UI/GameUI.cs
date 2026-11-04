@@ -6,9 +6,10 @@ using XianXia.Data;
 namespace XianXia.UI
 {
     // 整个界面的根。挂在 GameRoot 上，由 Bootstrap 自动创建。
+    // 布局全部按 640x360 的逻辑像素算，窗口放大 2 倍 = 1280x720。
     public class GameUI : MonoBehaviour
     {
-        const int MaxLogLines = 20;
+        const int MaxLogLines = 12;
 
         ContentLibrary _content;
         GameSession _session;
@@ -49,37 +50,50 @@ namespace XianXia.UI
 
             var scaler = canvasGo.GetComponent<CanvasScaler>();
             scaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
-            scaler.referenceResolution = new Vector2(1280f, 720f);
+            scaler.referenceResolution = new Vector2(PixelArtSettings.ReferenceWidth, PixelArtSettings.ReferenceHeight);
             scaler.matchWidthOrHeight = 0.5f;
+            // 关键：和精灵的 Pixels Per Unit 对齐，这样 32px 的图在 UI 里就是 32 逻辑像素
+            scaler.referencePixelsPerUnit = PixelArtSettings.PixelsPerUnit;
 
-            var bg = UIFactory.NewImage("Background", canvasGo.transform, new Color(0.055f, 0.065f, 0.085f, 1f));
+            // 背景：草地贴图平铺。取不到图就退回纯色，不影响功能
+            var bg = UIFactory.NewSpriteImage("Background", canvasGo.transform, "tile_grass",
+                new Color(0.45f, 0.50f, 0.58f, 1f), Image.Type.Tiled);
             UIFactory.Stretch(bg.rectTransform, 0f, 0f, 0f, 0f);
 
             // 顶部状态栏
-            var statusPanel = UIFactory.NewImage("StatusPanel", canvasGo.transform, new Color(1f, 1f, 1f, 0.05f));
+            var statusPanel = UIFactory.NewImage("StatusPanel", canvasGo.transform, new Color(0.05f, 0.06f, 0.08f, 0.88f));
             UIFactory.Anchor(statusPanel.rectTransform, new Vector2(0f, 1f), new Vector2(1f, 1f),
-                new Vector2(24f, -108f), new Vector2(-24f, -24f));
+                new Vector2(12f, -92f), new Vector2(-12f, -12f));
 
-            _statusText = UIFactory.NewText("StatusText", statusPanel.transform, "", 20,
+            // 立绘（暂时是 32x48 的占位小人）
+            var hero = UIFactory.NewSpriteImage("Hero", statusPanel.transform, "char_hero", Color.white);
+            var heroRt = hero.rectTransform;
+            heroRt.anchorMin = new Vector2(0f, 0.5f);
+            heroRt.anchorMax = new Vector2(0f, 0.5f);
+            heroRt.pivot = new Vector2(0f, 0.5f);
+            heroRt.anchoredPosition = new Vector2(6f, 0f);
+            heroRt.sizeDelta = new Vector2(32f, 48f);
+
+            _statusText = UIFactory.NewText("StatusText", statusPanel.transform, "", UIFactory.SizeNormal,
                 new Color(0.86f, 0.89f, 0.95f), TextAnchor.MiddleLeft);
-            UIFactory.Stretch(_statusText.rectTransform, 18f, 8f, 18f, 8f);
+            UIFactory.Stretch(_statusText.rectTransform, 44f, 4f, 6f, 4f);
 
             // 中间日志区
-            var logPanel = UIFactory.NewImage("LogPanel", canvasGo.transform, new Color(1f, 1f, 1f, 0.03f));
+            var logPanel = UIFactory.NewImage("LogPanel", canvasGo.transform, new Color(0.05f, 0.06f, 0.08f, 0.80f));
             UIFactory.Anchor(logPanel.rectTransform, new Vector2(0f, 0f), new Vector2(1f, 1f),
-                new Vector2(24f, 108f), new Vector2(-24f, -120f));
+                new Vector2(12f, 74f), new Vector2(-12f, -92f));
 
-            _logText = UIFactory.NewText("LogText", logPanel.transform, "", 18,
+            _logText = UIFactory.NewText("LogText", logPanel.transform, "", UIFactory.SizeNormal,
                 new Color(0.82f, 0.85f, 0.90f), TextAnchor.LowerLeft);
-            UIFactory.Stretch(_logText.rectTransform, 18f, 14f, 18f, 14f);
+            UIFactory.Stretch(_logText.rectTransform, 8f, 6f, 8f, 6f);
 
             // 底部按钮栏
             var bar = UIFactory.NewRect("ButtonBar", canvasGo.transform);
             UIFactory.Anchor(bar, new Vector2(0f, 0f), new Vector2(1f, 0f),
-                new Vector2(24f, 24f), new Vector2(-24f, 96f));
+                new Vector2(12f, 12f), new Vector2(-12f, 68f));
 
             var layout = bar.gameObject.AddComponent<HorizontalLayoutGroup>();
-            layout.spacing = 12f;
+            layout.spacing = 6f;
             layout.childAlignment = TextAnchor.MiddleCenter;
             layout.childControlWidth = true;
             layout.childControlHeight = true;
@@ -98,10 +112,10 @@ namespace XianXia.UI
 
         void AddBarButton(RectTransform parent, string label, UnityEngine.Events.UnityAction action)
         {
-            var btn = UIFactory.NewButton(label, parent, label, 20, action);
+            var btn = UIFactory.NewButton(label, parent, label, UIFactory.SizeNormal, action);
             var le = btn.gameObject.AddComponent<LayoutElement>();
             le.flexibleWidth = 1f;
-            le.minWidth = 100f;
+            le.minWidth = 48f;
         }
 
         void BuildEventPanel(Transform canvasRoot)
@@ -110,31 +124,31 @@ namespace XianXia.UI
             UIFactory.Stretch(overlay.rectTransform, 0f, 0f, 0f, 0f);
             _eventPanel = overlay.rectTransform;
 
-            var inner = UIFactory.NewImage("EventBox", overlay.transform, new Color(0.10f, 0.12f, 0.16f, 1f));
+            var inner = UIFactory.NewImage("EventBox", overlay.transform, new Color(0.09f, 0.11f, 0.14f, 0.99f));
             var rt = inner.rectTransform;
             rt.anchorMin = new Vector2(0.5f, 0.5f);
             rt.anchorMax = new Vector2(0.5f, 0.5f);
             rt.pivot = new Vector2(0.5f, 0.5f);
-            rt.sizeDelta = new Vector2(880f, 560f);
+            rt.sizeDelta = new Vector2(560f, 300f);
             rt.anchoredPosition = Vector2.zero;
 
-            _eventTitle = UIFactory.NewText("Title", inner.transform, "", 26,
+            _eventTitle = UIFactory.NewText("Title", inner.transform, "", UIFactory.SizeTitle,
                 new Color(0.95f, 0.90f, 0.72f), TextAnchor.MiddleLeft);
             UIFactory.Anchor(_eventTitle.rectTransform, new Vector2(0f, 1f), new Vector2(1f, 1f),
-                new Vector2(36f, -84f), new Vector2(-36f, -24f));
+                new Vector2(20f, -46f), new Vector2(-20f, -12f));
 
-            _eventBody = UIFactory.NewText("Body", inner.transform, "", 19,
+            _eventBody = UIFactory.NewText("Body", inner.transform, "", UIFactory.SizeNormal,
                 new Color(0.85f, 0.88f, 0.92f), TextAnchor.UpperLeft);
             UIFactory.Anchor(_eventBody.rectTransform, new Vector2(0f, 1f), new Vector2(1f, 1f),
-                new Vector2(36f, -280f), new Vector2(-36f, -92f));
+                new Vector2(20f, -170f), new Vector2(-20f, -52f));
 
             var options = UIFactory.NewRect("Options", inner.transform);
             UIFactory.Anchor(options, new Vector2(0f, 0f), new Vector2(1f, 0f),
-                new Vector2(36f, 28f), new Vector2(-36f, 254f));
+                new Vector2(20f, 16f), new Vector2(-20f, 164f));
             _eventOptions = options;
 
             var vlg = options.gameObject.AddComponent<VerticalLayoutGroup>();
-            vlg.spacing = 10f;
+            vlg.spacing = 6f;
             vlg.childAlignment = TextAnchor.UpperCenter;
             vlg.childControlWidth = true;
             vlg.childControlHeight = true;
@@ -246,19 +260,19 @@ namespace XianXia.UI
             foreach (var opt in opts)
             {
                 var captured = opt;
-                var btn = UIFactory.NewButton("Option", _eventOptions, captured.text, 18,
+                var btn = UIFactory.NewButton("Option", _eventOptions, captured.text, UIFactory.SizeNormal,
                     () => OnChoose(ev, captured));
                 var le = btn.gameObject.AddComponent<LayoutElement>();
-                le.minHeight = 48f;
-                le.preferredHeight = 48f;
+                le.minHeight = 34f;
+                le.preferredHeight = 34f;
             }
 
             if (opts.Count == 0)
             {
-                var btn = UIFactory.NewButton("Option", _eventOptions, "离开", 18, CloseEvent);
+                var btn = UIFactory.NewButton("Option", _eventOptions, "离开", UIFactory.SizeNormal, CloseEvent);
                 var le = btn.gameObject.AddComponent<LayoutElement>();
-                le.minHeight = 48f;
-                le.preferredHeight = 48f;
+                le.minHeight = 34f;
+                le.preferredHeight = 34f;
             }
         }
 

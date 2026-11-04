@@ -42,3 +42,6 @@ Thumbs.db
 # 我自己加的临时文件
 unity-run.log
 unity-batch.log
+
+# 扫描工具临时产物（不属于项目）
+_scan_files.*

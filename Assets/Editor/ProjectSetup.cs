@@ -3,6 +3,8 @@ using System.IO;
 using UnityEditor;
 using UnityEditor.SceneManagement;
 using UnityEngine;
+using UnityEngine.U2D;
+using XianXia;
 
 // 编辑期工具：生成主场景、配置工程、自我检查。
 // 命令行用法：
@@ -29,6 +31,8 @@ public static class ProjectSetup
         {
             SetupScene();
             SetupPlayer();
+            ReimportArt();
+            ReimportFonts();
             AssetDatabase.SaveAssets();
             Debug.Log("[Setup] 场景与工程设置 OK");
         }
@@ -63,9 +67,18 @@ public static class ProjectSetup
         cam.clearFlags = CameraClearFlags.SolidColor;
         cam.backgroundColor = new Color(0.055f, 0.065f, 0.085f, 1f);
         cam.orthographic = true;
-        cam.orthographicSize = 5f;
         camGo.tag = "MainCamera";
         camGo.transform.position = new Vector3(0f, 0f, -10f);
+
+        // 像素相机：自动算整数倍缩放 + 像素吸附，避免跑动时抖动和半像素缝隙
+        var ppc = camGo.AddComponent<PixelPerfectCamera>();
+        ppc.assetsPPU = PixelArtSettings.PixelsPerUnit;
+        ppc.refResolutionX = PixelArtSettings.ReferenceWidth;
+        ppc.refResolutionY = PixelArtSettings.ReferenceHeight;
+        ppc.upscaleRT = false;   // UI 是 Overlay Canvas，开 RT 反而会让 UI 不跟着缩放
+        ppc.pixelSnapping = true;
+        ppc.cropFrameX = false;
+        ppc.cropFrameY = false;
 
         EditorSceneManager.MarkSceneDirty(scene);
         EditorSceneManager.SaveScene(scene, ScenePath);
@@ -77,11 +90,58 @@ public static class ProjectSetup
     {
         PlayerSettings.companyName = "MyGame";
         PlayerSettings.productName = "修仙 Demo";
-        PlayerSettings.defaultScreenWidth = 1280;
-        PlayerSettings.defaultScreenHeight = 720;
+
+        // 窗口分辨率必须是基准分辨率的整数倍，否则像素会被插值糊掉
+        PlayerSettings.defaultScreenWidth = PixelArtSettings.ReferenceWidth * 2;
+        PlayerSettings.defaultScreenHeight = PixelArtSettings.ReferenceHeight * 2;
         PlayerSettings.fullScreenMode = FullScreenMode.Windowed;
         PlayerSettings.resizableWindow = true;
         PlayerSettings.runInBackground = true;
+
+        // 关掉所有质量等级的抗锯齿
+        try
+        {
+            int original = QualitySettings.GetQualityLevel();
+            int count = QualitySettings.names.Length;
+            for (int i = 0; i < count; i++)
+            {
+                QualitySettings.SetQualityLevel(i, false);
+                QualitySettings.antiAliasing = 0;
+            }
+            QualitySettings.SetQualityLevel(original, false);
+        }
+        catch (Exception e)
+        {
+            Debug.LogWarning("[Setup] 关闭抗锯齿失败（不影响运行）: " + e.Message);
+        }
+    }
+
+    // 强制重导美术资源，让 PixelArtImporter 的像素设置立刻生效（不然要等 Unity 自己重导）
+    static void ReimportArt()
+    {
+        var folder = PixelArtSettings.ArtRoot.TrimEnd('/');
+        if (!Directory.Exists(folder)) return;
+
+        var guids = AssetDatabase.FindAssets("t:Texture2D", new[] { folder });
+        foreach (var guid in guids)
+        {
+            AssetDatabase.ImportAsset(AssetDatabase.GUIDToAssetPath(guid), ImportAssetOptions.ForceUpdate);
+        }
+        Debug.Log("[Setup] 已重导美术资源 " + guids.Length + " 张");
+    }
+
+    // 强制重导字体，让 PixelFontImporter 的关抗锯齿设置生效
+    static void ReimportFonts()
+    {
+        const string folder = "Assets/Resources/Fonts";
+        if (!Directory.Exists(folder)) return;
+
+        var guids = AssetDatabase.FindAssets("t:Font", new[] { folder });
+        foreach (var guid in guids)
+        {
+            AssetDatabase.ImportAsset(AssetDatabase.GUIDToAssetPath(guid), ImportAssetOptions.ForceUpdate);
+        }
+        Debug.Log("[Setup] 已重导字体 " + guids.Length + " 个");
     }
 
     // 不依赖 UI 的逻辑自检：配置表能读、修行能涨、突破能成、事件能结算、存档能往返。
@@ -190,6 +250,51 @@ public static class ProjectSetup
         {
             Debug.LogError("[SelfCheck] 未满足条件的事件被判定为可选");
             failures++;
+        }
+
+        // 像素美术管线检查：精灵存在、PPU 一致、过滤方式是 Point
+        string[] spriteNames = { "tile_grass", "tile_rock", "tile_water", "tile_path", "char_hero" };
+        int spriteOk = 0;
+
+        foreach (var spriteName in spriteNames)
+        {
+            var sprite = Resources.Load<Sprite>(PixelArtSettings.ArtResourceRoot + spriteName);
+            if (sprite == null)
+            {
+                Debug.LogError("[SelfCheck] 找不到精灵: " + PixelArtSettings.ArtResourceRoot + spriteName);
+                failures++;
+                continue;
+            }
+
+            if (Mathf.Abs(sprite.pixelsPerUnit - PixelArtSettings.PixelsPerUnit) > 0.01f)
+            {
+                Debug.LogError("[SelfCheck] " + spriteName + " 的 PPU = " + sprite.pixelsPerUnit +
+                               "，应为 " + PixelArtSettings.PixelsPerUnit);
+                failures++;
+            }
+
+            if (sprite.texture.filterMode != FilterMode.Point)
+            {
+                Debug.LogError("[SelfCheck] " + spriteName + " 的 FilterMode = " + sprite.texture.filterMode + "，应为 Point");
+                failures++;
+            }
+
+            spriteOk++;
+        }
+
+        Debug.Log("[SelfCheck] 像素精灵 " + spriteOk + "/" + spriteNames.Length +
+                  " 张通过（PPU=" + PixelArtSettings.PixelsPerUnit +
+                  "，基准 " + PixelArtSettings.ReferenceWidth + "x" + PixelArtSettings.ReferenceHeight + "）");
+
+        // 像素字体检查：有就用自己带的，没有就退回系统字体（不判失败，只是提示）
+        var fonts = Resources.LoadAll<Font>("Fonts");
+        if (fonts == null || fonts.Length == 0)
+        {
+            Debug.LogWarning("[SelfCheck] Resources/Fonts 下没有字体，会退回系统字体，中文可能不清晰");
+        }
+        else
+        {
+            Debug.Log("[SelfCheck] 像素字体已就绪: " + fonts[0].name + "（" + fonts.Length + " 个）");
         }
 
         Debug.Log("[SelfCheck] 完成，失败项 = " + failures);

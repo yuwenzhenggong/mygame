@@ -8,6 +8,12 @@ namespace XianXia.UI
     public static class UIFactory
     {
         static Font _mainFont;
+        static bool _hookedFontRebuild;
+
+        // 像素游戏的字号都按「逻辑像素」算：12 在 2 倍窗口下就是 24 个物理像素
+        public const int SizeSmall = 12;
+        public const int SizeNormal = 12;
+        public const int SizeTitle = 14;
 
         public static Font MainFont
         {
@@ -15,12 +21,46 @@ namespace XianXia.UI
             {
                 if (_mainFont != null) return _mainFont;
 
-                // 必须用系统中文字体，Unity 内置的 Arial 不含中文字形（会显示方块）
-                string[] candidates = { "Microsoft YaHei", "微软雅黑", "SimHei", "黑体", "SimSun", "宋体", "Arial" };
-                _mainFont = Font.CreateDynamicFontFromOSFont(candidates, 20);
+                // 1) 优先用 Assets/Resources/Fonts/ 下你自己放的字体（文件名随意）
+                var custom = Resources.LoadAll<Font>("Fonts");
+                if (custom != null)
+                {
+                    foreach (var f in custom)
+                    {
+                        if (f != null) { _mainFont = f; break; }
+                    }
+                }
+
+                // 2) 退回到系统中文字体。Unity 内置 Arial 不含中文字形，会显示方块
+                if (_mainFont == null)
+                {
+                    string[] candidates = { "Microsoft YaHei", "微软雅黑", "SimHei", "黑体", "SimSun", "宋体", "Arial" };
+                    _mainFont = Font.CreateDynamicFontFromOSFont(candidates, SizeNormal);
+                }
 
                 if (_mainFont == null) _mainFont = Resources.GetBuiltinResource<Font>("Arial.ttf");
+
+                // 3) 字体图集用 Point 过滤，放大后才是硬边像素而不是模糊
+                if (!_hookedFontRebuild)
+                {
+                    Font.textureRebuilt += OnFontTextureRebuilt;
+                    _hookedFontRebuild = true;
+                }
+
                 return _mainFont;
+            }
+        }
+
+        static void OnFontTextureRebuilt(Font font)
+        {
+            try
+            {
+                if (font != null && font.material != null && font.material.mainTexture != null)
+                    font.material.mainTexture.filterMode = FilterMode.Point;
+            }
+            catch
+            {
+                // 个别 Unity 版本上动态字体的材质不可写，忽略即可，不影响功能
             }
         }
 
@@ -56,6 +96,24 @@ namespace XianXia.UI
             return img;
         }
 
+        // 从 Resources/Art/ 取精灵；取不到就退回纯色块，保证界面不崩
+        public static Image NewSpriteImage(string name, Transform parent, string spriteName, Color tint,
+                                           Image.Type type = Image.Type.Simple)
+        {
+            var img = NewImage(name, parent, tint);
+            var sprite = Resources.Load<Sprite>(PixelArtSettings.ArtResourceRoot + spriteName);
+            if (sprite != null)
+            {
+                img.sprite = sprite;
+                img.type = type;
+            }
+            else
+            {
+                Debug.LogWarning("[UIFactory] 找不到精灵: " + PixelArtSettings.ArtResourceRoot + spriteName);
+            }
+            return img;
+        }
+
         public static Text NewText(string name, Transform parent, string content, int size, Color color,
                                    TextAnchor anchor = TextAnchor.UpperLeft)
         {
@@ -87,7 +145,7 @@ namespace XianXia.UI
             btn.colors = colors;
 
             var txt = NewText("Label", img.transform, label, size, new Color(0.93f, 0.95f, 1f), TextAnchor.MiddleCenter);
-            Stretch(txt.rectTransform, 10f, 4f, 10f, 4f);
+            Stretch(txt.rectTransform, 4f, 2f, 4f, 2f);
 
             if (onClick != null) btn.onClick.AddListener(onClick);
             return btn;

@@ -105,20 +105,31 @@ namespace XianXia.World
             var spawn = MapGrid.CellCenter(Grid.Spawn.x, Grid.Spawn.y);
             playerGo.transform.position = new Vector3(spawn.x, spawn.y, 0f);
 
-            // 精灵 32x48，pivot 在中心 → 身体往上抬 0.75，让脚底正好落在玩家坐标上
+            // 精灵 48x64（PPU 32）→ 世界尺寸 1.5 x 2；pivot 在中心，所以身体抬 1.0 让脚底落在玩家坐标上
             var bodyGo = new GameObject("Body");
             bodyGo.transform.SetParent(playerGo.transform, false);
-            bodyGo.transform.localPosition = new Vector3(0f, 0.75f, 0f);
+            bodyGo.transform.localPosition = new Vector3(0f, 1f, 0f);
 
             var sr = bodyGo.AddComponent<SpriteRenderer>();
-            sr.sprite = Resources.Load<Sprite>(PixelArtSettings.ArtResourceRoot + "char_hero");
             sr.sortingOrder = 10;
-            if (sr.sprite == null) Debug.LogError("[World] 找不到角色精灵 char_hero");
+            sr.sprite = LoadSprite("hero_front");
 
             var walker = playerGo.AddComponent<PlayerWalker>();
             walker.Init(Grid);
+            walker.SetSprites(
+                LoadSprite("hero_front"),
+                LoadSprite("hero_right"),
+                LoadSprite("hero_back"),
+                LoadSprite("hero_left"));
 
             PlayerTransform = playerGo.transform;
+        }
+
+        Sprite LoadSprite(string name)
+        {
+            var sprite = Resources.Load<Sprite>(PixelArtSettings.ArtResourceRoot + name);
+            if (sprite == null) Debug.LogError("[World] 找不到精灵: " + name);
+            return sprite;
         }
 
         void SetupCamera()

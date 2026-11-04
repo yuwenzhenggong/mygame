@@ -253,7 +253,8 @@ public static class ProjectSetup
         }
 
         // 像素美术管线检查：精灵存在、PPU 一致、过滤方式是 Point
-        string[] spriteNames = { "tile_grass", "tile_rock", "tile_water", "tile_path", "char_hero" };
+        string[] spriteNames = { "tile_grass", "tile_rock", "tile_water", "tile_path",
+                                 "hero_front", "hero_right", "hero_back", "hero_left" };
         int spriteOk = 0;
 
         foreach (var spriteName in spriteNames)

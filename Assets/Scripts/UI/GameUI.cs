@@ -73,19 +73,19 @@ namespace XianXia.UI
             UIFactory.Anchor(statusPanel.rectTransform, new Vector2(0f, 1f), new Vector2(1f, 1f),
                 new Vector2(12f, -76f), new Vector2(-12f, -12f));
 
-            // 立绘占位（32x48）
-            var hero = UIFactory.NewSpriteImage("Hero", statusPanel.transform, "char_hero", Color.white);
+            // 立绘：用主角的正面图（48x64 原尺寸显示，1:1 映射到逻辑像素最清晰）
+            var hero = UIFactory.NewSpriteImage("Hero", statusPanel.transform, "hero_front", Color.white);
             hero.raycastTarget = false;
             var heroRt = hero.rectTransform;
             heroRt.anchorMin = new Vector2(0f, 0.5f);
             heroRt.anchorMax = new Vector2(0f, 0.5f);
             heroRt.pivot = new Vector2(0f, 0.5f);
-            heroRt.anchoredPosition = new Vector2(6f, 0f);
-            heroRt.sizeDelta = new Vector2(32f, 48f);
+            heroRt.anchoredPosition = new Vector2(2f, 0f);
+            heroRt.sizeDelta = new Vector2(48f, 64f);
 
             _statusText = UIFactory.NewText("StatusText", statusPanel.transform, "", UIFactory.SizeNormal,
                 new Color(0.86f, 0.89f, 0.95f), TextAnchor.MiddleLeft);
-            UIFactory.Stretch(_statusText.rectTransform, 44f, 4f, 150f, 4f);
+            UIFactory.Stretch(_statusText.rectTransform, 56f, 4f, 150f, 4f);
 
             var hint = UIFactory.NewText("Hint", statusPanel.transform, "WASD / 方向键 移动", UIFactory.SizeSmall,
                 new Color(0.60f, 0.66f, 0.76f), TextAnchor.MiddleRight);

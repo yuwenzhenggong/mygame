@@ -5,11 +5,12 @@ using XianXia.Data;
 
 namespace XianXia.UI
 {
-    // 整个界面的根。挂在 GameRoot 上，由 Bootstrap 自动创建。
-    // 布局全部按 640x360 的逻辑像素算，窗口放大 2 倍 = 1280x720。
+    // HUD 与交互界面。挂在 GameRoot 上，由 Bootstrap 自动创建。
+    // 布局按 640x360 逻辑像素算，窗口放大 2 倍 = 1280x720。
+    // 注意：这里不再画背景——背景就是世界本身（地图），HUD 只做叠加。
     public class GameUI : MonoBehaviour
     {
-        const int MaxLogLines = 12;
+        const int MaxLogLines = 5;
 
         ContentLibrary _content;
         GameSession _session;
@@ -23,8 +24,19 @@ namespace XianXia.UI
         Text _eventBody;
         RectTransform _eventOptions;
 
+        bool _initialized;
+
         void Awake()
         {
+            Initialize();
+        }
+
+        // 单独抽出来，好让编辑器预览/测试能在非运行状态下建界面
+        public void Initialize()
+        {
+            if (_initialized) return;
+            _initialized = true;
+
             BuildUI();
             _content = ContentLibrary.Load();
 
@@ -52,21 +64,18 @@ namespace XianXia.UI
             scaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
             scaler.referenceResolution = new Vector2(PixelArtSettings.ReferenceWidth, PixelArtSettings.ReferenceHeight);
             scaler.matchWidthOrHeight = 0.5f;
-            // 关键：和精灵的 Pixels Per Unit 对齐，这样 32px 的图在 UI 里就是 32 逻辑像素
+            // 和精灵的 Pixels Per Unit 对齐，32px 的图在 UI 里就是 32 逻辑像素
             scaler.referencePixelsPerUnit = PixelArtSettings.PixelsPerUnit;
 
-            // 背景：草地贴图平铺。取不到图就退回纯色，不影响功能
-            var bg = UIFactory.NewSpriteImage("Background", canvasGo.transform, "tile_grass",
-                new Color(0.45f, 0.50f, 0.58f, 1f), Image.Type.Tiled);
-            UIFactory.Stretch(bg.rectTransform, 0f, 0f, 0f, 0f);
-
             // 顶部状态栏
-            var statusPanel = UIFactory.NewImage("StatusPanel", canvasGo.transform, new Color(0.05f, 0.06f, 0.08f, 0.88f));
+            var statusPanel = UIFactory.NewImage("StatusPanel", canvasGo.transform, new Color(0.05f, 0.06f, 0.08f, 0.82f));
+            statusPanel.raycastTarget = false;
             UIFactory.Anchor(statusPanel.rectTransform, new Vector2(0f, 1f), new Vector2(1f, 1f),
-                new Vector2(12f, -92f), new Vector2(-12f, -12f));
+                new Vector2(12f, -76f), new Vector2(-12f, -12f));
 
-            // 立绘（暂时是 32x48 的占位小人）
+            // 立绘占位（32x48）
             var hero = UIFactory.NewSpriteImage("Hero", statusPanel.transform, "char_hero", Color.white);
+            hero.raycastTarget = false;
             var heroRt = hero.rectTransform;
             heroRt.anchorMin = new Vector2(0f, 0.5f);
             heroRt.anchorMax = new Vector2(0f, 0.5f);
@@ -76,12 +85,18 @@ namespace XianXia.UI
 
             _statusText = UIFactory.NewText("StatusText", statusPanel.transform, "", UIFactory.SizeNormal,
                 new Color(0.86f, 0.89f, 0.95f), TextAnchor.MiddleLeft);
-            UIFactory.Stretch(_statusText.rectTransform, 44f, 4f, 6f, 4f);
+            UIFactory.Stretch(_statusText.rectTransform, 44f, 4f, 150f, 4f);
 
-            // 中间日志区
-            var logPanel = UIFactory.NewImage("LogPanel", canvasGo.transform, new Color(0.05f, 0.06f, 0.08f, 0.80f));
-            UIFactory.Anchor(logPanel.rectTransform, new Vector2(0f, 0f), new Vector2(1f, 1f),
-                new Vector2(12f, 74f), new Vector2(-12f, -92f));
+            var hint = UIFactory.NewText("Hint", statusPanel.transform, "WASD / 方向键 移动", UIFactory.SizeSmall,
+                new Color(0.60f, 0.66f, 0.76f), TextAnchor.MiddleRight);
+            UIFactory.Anchor(hint.rectTransform, new Vector2(1f, 0f), new Vector2(1f, 1f),
+                new Vector2(-142f, 0f), new Vector2(-8f, 0f));
+
+            // 左下日志
+            var logPanel = UIFactory.NewImage("LogPanel", canvasGo.transform, new Color(0.05f, 0.06f, 0.08f, 0.74f));
+            logPanel.raycastTarget = false;
+            UIFactory.Anchor(logPanel.rectTransform, new Vector2(0f, 0f), new Vector2(0f, 0f),
+                new Vector2(12f, 68f), new Vector2(332f, 148f));
 
             _logText = UIFactory.NewText("LogText", logPanel.transform, "", UIFactory.SizeNormal,
                 new Color(0.82f, 0.85f, 0.90f), TextAnchor.LowerLeft);
@@ -90,7 +105,7 @@ namespace XianXia.UI
             // 底部按钮栏
             var bar = UIFactory.NewRect("ButtonBar", canvasGo.transform);
             UIFactory.Anchor(bar, new Vector2(0f, 0f), new Vector2(1f, 0f),
-                new Vector2(12f, 12f), new Vector2(-12f, 68f));
+                new Vector2(12f, 12f), new Vector2(-12f, 60f));
 
             var layout = bar.gameObject.AddComponent<HorizontalLayoutGroup>();
             layout.spacing = 6f;
@@ -167,7 +182,7 @@ namespace XianXia.UI
             _session.LearnTechnique("t_basic");
 
             AppendLog("你生于青云山下的小村，自幼能感灵气。");
-            AppendLog("「修炼」积累修为，「突破」跨境界，「游历」遇事。");
+            AppendLog("WASD 走动，「修炼」积修为，「游历」遇事。");
             Refresh();
         }
 
@@ -274,6 +289,8 @@ namespace XianXia.UI
                 le.minHeight = 34f;
                 le.preferredHeight = 34f;
             }
+
+            Refresh();
         }
 
         void OnChoose(EventDef ev, EventOption opt)
@@ -298,6 +315,7 @@ namespace XianXia.UI
         void CloseEvent()
         {
             if (_eventPanel != null) _eventPanel.gameObject.SetActive(false);
+            Refresh();
         }
 
         // ---------------- 杂项 ----------------
@@ -313,6 +331,10 @@ namespace XianXia.UI
         {
             if (_statusText != null && _session != null) _statusText.text = _session.StatusText();
             if (_logText != null) _logText.text = string.Join("\n", _log.ToArray());
+
+            // 事件面板开着、或者人已经死了 → 冻结走动
+            bool modalOpen = _eventPanel != null && _eventPanel.gameObject.activeSelf;
+            GameFlow.IsBlocked = modalOpen || (_session != null && _session.IsDead);
         }
     }
 }

@@ -1,6 +1,7 @@
 using UnityEngine;
 using UnityEngine.EventSystems;
 using XianXia.UI;
+using XianXia.World;
 
 namespace XianXia
 {
@@ -21,7 +22,9 @@ namespace XianXia
 
             var root = new GameObject("GameRoot");
             Object.DontDestroyOnLoad(root);
-            root.AddComponent<GameUI>();
+
+            root.AddComponent<WorldRoot>();   // 世界：地图 + 玩家 + 相机
+            root.AddComponent<GameUI>();      // HUD：叠在世界上面
         }
     }
 }

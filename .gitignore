@@ -39,9 +39,14 @@ Thumbs.db
 *.aab
 *.unitypackage
 
-# 我自己加的临时文件
+# 脚本生成的日志（可随时重新生成）
 unity-run.log
 unity-batch.log
+preview.log
 
-# 扫描工具临时产物（不属于项目）
+# 脚本生成的预览图
+preview_world.png
+
+# 扫描/排查工具留下的临时产物（不属于本项目，磁盘上保留但不进仓库）
 _scan_files.*
+E盘*

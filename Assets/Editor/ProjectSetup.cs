@@ -297,7 +297,117 @@ public static class ProjectSetup
             Debug.Log("[SelfCheck] 像素字体已就绪: " + fonts[0].name + "（" + fonts.Length + " 个）");
         }
 
+        // 地图配置检查
+        var map = XianXia.World.MapGrid.Load();
+        if (map == null)
+        {
+            Debug.LogError("[SelfCheck] 地图加载失败");
+            failures++;
+        }
+        else
+        {
+            Debug.Log("[SelfCheck] 地图 " + map.Width + "x" + map.Height + "，出生点 " + map.Spawn);
+
+            if (map.IsSolid(map.Spawn.x, map.Spawn.y))
+            {
+                Debug.LogError("[SelfCheck] 出生点落在实心格上，玩家会被卡死");
+                failures++;
+            }
+
+            // 出生点必须至少有一个可走方向，否则一开局就卡住
+            bool hasExit = !map.IsSolid(map.Spawn.x + 1, map.Spawn.y) ||
+                           !map.IsSolid(map.Spawn.x - 1, map.Spawn.y) ||
+                           !map.IsSolid(map.Spawn.x, map.Spawn.y + 1) ||
+                           !map.IsSolid(map.Spawn.x, map.Spawn.y - 1);
+            if (!hasExit)
+            {
+                Debug.LogError("[SelfCheck] 出生点四周全是墙");
+                failures++;
+            }
+        }
+
         Debug.Log("[SelfCheck] 完成，失败项 = " + failures);
         return failures;
+    }
+
+    // 把世界渲染成一张 640x360 的 PNG，用来检查像素比例、精灵排序、Tilemap 是否画得出来。
+    // 命令行：-executeMethod ProjectSetup.CaptureWorldPreview
+    [MenuItem("修仙 Demo/渲染世界预览图")]
+    public static void CaptureWorldPreview()
+    {
+        EditorSceneManager.OpenScene(ScenePath, OpenSceneMode.Single);
+
+        var cam = Camera.main;
+        if (cam == null)
+        {
+            Debug.LogError("[Preview] 场景里没有 MainCamera");
+            EditorApplication.Exit(1);
+            return;
+        }
+
+        var rootGo = new GameObject("__PreviewWorld");
+        var world = rootGo.AddComponent<XianXia.World.WorldRoot>();
+        world.Build();
+
+        if (world.Grid == null)
+        {
+            Debug.LogError("[Preview] 世界构建失败");
+            EditorApplication.Exit(1);
+            return;
+        }
+
+        // 顺便把 HUD 也建出来。ScreenSpaceOverlay 的 Canvas 相机拍不到，
+        // 所以临时改成 ScreenSpaceCamera 才能一起进截图。
+        var uiGo = new GameObject("__PreviewUI");
+        var gameUI = uiGo.AddComponent<XianXia.UI.GameUI>();
+        gameUI.Initialize();   // 编辑模式下 Awake 不会跑，得手动初始化
+        var canvas = uiGo.GetComponentInChildren<Canvas>();
+        if (canvas != null)
+        {
+            canvas.renderMode = RenderMode.ScreenSpaceCamera;
+            canvas.worldCamera = cam;
+            canvas.planeDistance = 1f;
+        }
+        else
+        {
+            Debug.LogWarning("[Preview] 没找到 Canvas，截图里不会有 HUD");
+        }
+
+        const int w = PixelArtSettings.ReferenceWidth;
+        const int h = PixelArtSettings.ReferenceHeight;
+
+        cam.orthographic = true;
+        cam.orthographicSize = h / 2f / PixelArtSettings.PixelsPerUnit;
+        cam.aspect = (float)w / h;
+        cam.nearClipPlane = 0.1f;
+        cam.farClipPlane = 1000f;
+
+        float halfW = cam.orthographicSize * cam.aspect;
+        float cx = Mathf.Clamp(world.Grid.Spawn.x + 0.5f, halfW, world.Grid.Width - halfW);
+        float cy = Mathf.Clamp(world.Grid.Spawn.y + 0.5f, cam.orthographicSize, world.Grid.Height - cam.orthographicSize);
+        cam.transform.position = new Vector3(cx, cy, -10f);
+
+        var rt = new RenderTexture(w, h, 24, RenderTextureFormat.ARGB32) { filterMode = FilterMode.Point };
+        cam.targetTexture = rt;
+        cam.Render();
+
+        RenderTexture.active = rt;
+        var tex = new Texture2D(w, h, TextureFormat.RGB24, false);
+        tex.ReadPixels(new Rect(0, 0, w, h), 0, 0);
+        tex.Apply();
+        RenderTexture.active = null;
+        cam.targetTexture = null;
+
+        var outPath = Path.Combine(Path.GetDirectoryName(Application.dataPath), "preview_world.png");
+        File.WriteAllBytes(outPath, tex.EncodeToPNG());
+
+        UnityEngine.Object.DestroyImmediate(tex);
+        rt.Release();
+        UnityEngine.Object.DestroyImmediate(rt);
+        UnityEngine.Object.DestroyImmediate(uiGo);
+        UnityEngine.Object.DestroyImmediate(rootGo);
+
+        Debug.Log("[Preview] 已保存: " + outPath);
+        EditorApplication.Exit(0);
     }
 }

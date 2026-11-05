@@ -21,7 +21,7 @@ namespace XianXia.World
         public float HalfWidth = 0.28f;
         public float HalfHeight = 0.16f;
 
-        MapGrid _grid;
+        SceneData _scene;
         SpriteRenderer _body;
 
         // 按 Facing 枚举下标存：0=正 1=右 2=背 3=左
@@ -30,9 +30,9 @@ namespace XianXia.World
 
         public Facing CurrentFacing => _facing;
 
-        public void Init(MapGrid grid)
+        public void Init(SceneData scene)
         {
-            _grid = grid;
+            _scene = scene;
         }
 
         public void SetSprites(Sprite front, Sprite right, Sprite back, Sprite left)
@@ -52,7 +52,7 @@ namespace XianXia.World
 
         void Update()
         {
-            if (_grid == null) return;
+            if (_scene == null) return;
             if (GameFlow.IsBlocked) return;   // 事件面板打开时不许走
 
             float h = Input.GetAxisRaw("Horizontal");
@@ -106,10 +106,10 @@ namespace XianXia.World
 
         bool Blocks(Vector2 feet)
         {
-            return _grid.IsSolidAt(new Vector2(feet.x - HalfWidth, feet.y - HalfHeight)) ||
-                   _grid.IsSolidAt(new Vector2(feet.x + HalfWidth, feet.y - HalfHeight)) ||
-                   _grid.IsSolidAt(new Vector2(feet.x - HalfWidth, feet.y + HalfHeight)) ||
-                   _grid.IsSolidAt(new Vector2(feet.x + HalfWidth, feet.y + HalfHeight));
+            return _scene.IsSolidAt(new Vector2(feet.x - HalfWidth, feet.y - HalfHeight)) ||
+                   _scene.IsSolidAt(new Vector2(feet.x + HalfWidth, feet.y - HalfHeight)) ||
+                   _scene.IsSolidAt(new Vector2(feet.x - HalfWidth, feet.y + HalfHeight)) ||
+                   _scene.IsSolidAt(new Vector2(feet.x + HalfWidth, feet.y + HalfHeight));
         }
     }
 }

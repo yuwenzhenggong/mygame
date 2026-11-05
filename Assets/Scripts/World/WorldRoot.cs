@@ -1,14 +1,12 @@
-using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.Tilemaps;
 
 namespace XianXia.World
 {
-    // 世界根节点：建地图、放玩家、挂相机跟随。
-    // 全部运行时用代码搭，不依赖场景里的 prefab 或 Tile Palette 资源。
+    // 世界根节点：铺背景图、放玩家、挂相机跟随。
+    // 全部运行时用代码搭，不依赖场景里的 prefab。
     public class WorldRoot : MonoBehaviour
     {
-        public MapGrid Grid { get; private set; }
+        public SceneData Scene { get; private set; }
         public Transform PlayerTransform { get; private set; }
 
         bool _built;
@@ -23,89 +21,50 @@ namespace XianXia.World
             if (_built) return;
             _built = true;
 
-            Grid = MapGrid.Load();
-            if (Grid == null)
+            Scene = SceneData.Load();
+            if (Scene == null)
             {
-                Debug.LogError("[World] 地图加载失败，世界不会出现");
+                Debug.LogError("[World] 场景加载失败，世界不会出现");
                 return;
             }
 
-            BuildTilemap();
+            BuildBackdrop();
             BuildPlayer();
             SetupCamera();
 
-            Debug.Log("[World] 地图 " + Grid.Width + "x" + Grid.Height + "，出生点 " + Grid.Spawn);
+            Debug.Log("[World] 场景 " + Scene.ImageWidth + "x" + Scene.ImageHeight
+                      + "，世界 " + Scene.WorldWidth.ToString("0.##") + " x " + Scene.WorldHeight.ToString("0.##")
+                      + " 单位，遮罩 " + Scene.Cols + "x" + Scene.Rows + " 格");
         }
 
-        void BuildTilemap()
+        void BuildBackdrop()
         {
-            var gridGo = new GameObject("Grid");
-            gridGo.transform.SetParent(transform, false);
-            var grid = gridGo.AddComponent<Grid>();
-            grid.cellSize = new Vector3(1f, 1f, 0f);
-
-            var tilemapGo = new GameObject("Tilemap");
-            tilemapGo.transform.SetParent(gridGo.transform, false);
-
-            var tilemap = tilemapGo.AddComponent<Tilemap>();
-            var tilemapRenderer = tilemapGo.AddComponent<TilemapRenderer>();
-            tilemapRenderer.sortingOrder = 0;
-
-            // 运行时 AddComponent 的 TilemapRenderer 没有默认材质，必须手动给，否则什么都不画
-            var shader = Shader.Find("Sprites/Default");
-            if (shader != null)
+            var sprite = Resources.Load<Sprite>(Scene.ImageName);
+            if (sprite == null)
             {
-                var mat = new Material(shader) { name = "PixelTilemap" };
-                tilemapRenderer.material = mat;
-            }
-            else
-            {
-                Debug.LogError("[World] 找不到 Sprites/Default 着色器");
+                Debug.LogError("[World] 找不到场景图: " + Scene.ImageName);
+                return;
             }
 
-            // 同一种精灵只建一个 Tile 实例
-            var tileCache = new Dictionary<string, TileBase>();
+            var go = new GameObject("Backdrop");
+            go.transform.SetParent(transform, false);
 
-            for (int y = 0; y < Grid.Height; y++)
-            {
-                for (int x = 0; x < Grid.Width; x++)
-                {
-                    var spriteName = Grid.SpriteName[x, y];
-                    if (string.IsNullOrEmpty(spriteName)) continue;
+            var sr = go.AddComponent<SpriteRenderer>();
+            sr.sprite = sprite;
+            sr.sortingOrder = -10;   // 永远在所有角色后面
 
-                    TileBase tile;
-                    if (!tileCache.TryGetValue(spriteName, out tile))
-                    {
-                        var sprite = Resources.Load<Sprite>(PixelArtSettings.ArtResourceRoot + spriteName);
-                        if (sprite == null)
-                        {
-                            Debug.LogError("[World] 找不到精灵: " + spriteName);
-                            continue;
-                        }
-
-                        var t = ScriptableObject.CreateInstance<Tile>();
-                        t.sprite = sprite;
-                        t.colliderType = Tile.ColliderType.None;   // 碰撞自己算，不用 Tilemap 的
-                        tile = t;
-                        tileCache[spriteName] = tile;
-                    }
-
-                    tilemap.SetTile(new Vector3Int(x, y, 0), tile);
-                }
-            }
-
-            tilemap.CompressBounds();
+            // 精灵 pivot 在中心，放到 (宽/2, 高/2) 让图片左下角正好落在世界原点
+            var size = sprite.bounds.size;
+            go.transform.position = new Vector3(size.x * 0.5f, size.y * 0.5f, 0f);
         }
 
         void BuildPlayer()
         {
             var playerGo = new GameObject("Player");
             playerGo.transform.SetParent(transform, false);
+            playerGo.transform.position = new Vector3(Scene.Spawn.x, Scene.Spawn.y, 0f);
 
-            var spawn = MapGrid.CellCenter(Grid.Spawn.x, Grid.Spawn.y);
-            playerGo.transform.position = new Vector3(spawn.x, spawn.y, 0f);
-
-            // 精灵 48x64（PPU 32）→ 世界尺寸 1.5 x 2；pivot 在中心，所以身体抬 1.0 让脚底落在玩家坐标上
+            // 精灵 48x64（PPU 32）→ 世界 1.5 x 2；pivot 在中心，所以身体抬 1.0 让脚底落在玩家坐标上
             var bodyGo = new GameObject("Body");
             bodyGo.transform.SetParent(playerGo.transform, false);
             bodyGo.transform.localPosition = new Vector3(0f, 1f, 0f);
@@ -115,7 +74,7 @@ namespace XianXia.World
             sr.sprite = LoadSprite("hero_front");
 
             var walker = playerGo.AddComponent<PlayerWalker>();
-            walker.Init(Grid);
+            walker.Init(Scene);
             walker.SetSprites(
                 LoadSprite("hero_front"),
                 LoadSprite("hero_right"),
@@ -148,7 +107,7 @@ namespace XianXia.World
 
             var follow = cam.GetComponent<CameraFollow>();
             if (follow == null) follow = cam.gameObject.AddComponent<CameraFollow>();
-            follow.Init(PlayerTransform, Grid);
+            follow.Init(PlayerTransform, Scene);
         }
     }
 }

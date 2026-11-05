@@ -253,8 +253,7 @@ public static class ProjectSetup
         }
 
         // 像素美术管线检查：精灵存在、PPU 一致、过滤方式是 Point
-        string[] spriteNames = { "tile_grass", "tile_rock", "tile_water", "tile_path",
-                                 "hero_front", "hero_right", "hero_back", "hero_left" };
+        string[] spriteNames = { "city_street", "hero_front", "hero_right", "hero_back", "hero_left" };
         int spriteOk = 0;
 
         foreach (var spriteName in spriteNames)
@@ -298,28 +297,34 @@ public static class ProjectSetup
             Debug.Log("[SelfCheck] 像素字体已就绪: " + fonts[0].name + "（" + fonts.Length + " 个）");
         }
 
-        // 地图配置检查
-        var map = XianXia.World.MapGrid.Load();
-        if (map == null)
+        // 场景检查：背景图存在、遮罩可解析、出生点可走且四周有路
+        var scene = XianXia.World.SceneData.Load();
+        if (scene == null)
         {
-            Debug.LogError("[SelfCheck] 地图加载失败");
+            Debug.LogError("[SelfCheck] 场景加载失败");
             failures++;
         }
         else
         {
-            Debug.Log("[SelfCheck] 地图 " + map.Width + "x" + map.Height + "，出生点 " + map.Spawn);
+            Debug.Log("[SelfCheck] 场景 " + scene.ImageWidth + "x" + scene.ImageHeight
+                      + "，遮罩 " + scene.Cols + "x" + scene.Rows + " 格（每格 " + scene.CellSize + "px）"
+                      + "，世界 " + scene.WorldWidth.ToString("0.##") + " x " + scene.WorldHeight.ToString("0.##"));
 
-            if (map.IsSolid(map.Spawn.x, map.Spawn.y))
+            if (Resources.Load<Sprite>(scene.ImageName) == null)
             {
-                Debug.LogError("[SelfCheck] 出生点落在实心格上，玩家会被卡死");
+                Debug.LogError("[SelfCheck] 找不到场景背景图: " + scene.ImageName);
                 failures++;
             }
 
-            // 出生点必须至少有一个可走方向，否则一开局就卡住
-            bool hasExit = !map.IsSolid(map.Spawn.x + 1, map.Spawn.y) ||
-                           !map.IsSolid(map.Spawn.x - 1, map.Spawn.y) ||
-                           !map.IsSolid(map.Spawn.x, map.Spawn.y + 1) ||
-                           !map.IsSolid(map.Spawn.x, map.Spawn.y - 1);
+            var cell = scene.WorldToCell(scene.Spawn);
+            if (scene.IsSolidCell(cell.x, cell.y))
+            {
+                Debug.LogError("[SelfCheck] 出生点落在实心格上: " + cell);
+                failures++;
+            }
+
+            bool hasExit = !scene.IsSolidCell(cell.x + 1, cell.y) || !scene.IsSolidCell(cell.x - 1, cell.y) ||
+                           !scene.IsSolidCell(cell.x, cell.y + 1) || !scene.IsSolidCell(cell.x, cell.y - 1);
             if (!hasExit)
             {
                 Debug.LogError("[SelfCheck] 出生点四周全是墙");
@@ -350,7 +355,7 @@ public static class ProjectSetup
         var world = rootGo.AddComponent<XianXia.World.WorldRoot>();
         world.Build();
 
-        if (world.Grid == null)
+        if (world.Scene == null)
         {
             Debug.LogError("[Preview] 世界构建失败");
             EditorApplication.Exit(1);
@@ -384,8 +389,8 @@ public static class ProjectSetup
         cam.farClipPlane = 1000f;
 
         float halfW = cam.orthographicSize * cam.aspect;
-        float cx = Mathf.Clamp(world.Grid.Spawn.x + 0.5f, halfW, world.Grid.Width - halfW);
-        float cy = Mathf.Clamp(world.Grid.Spawn.y + 0.5f, cam.orthographicSize, world.Grid.Height - cam.orthographicSize);
+        float cx = Mathf.Clamp(world.Scene.Spawn.x, halfW, world.Scene.WorldWidth - halfW);
+        float cy = Mathf.Clamp(world.Scene.Spawn.y, cam.orthographicSize, world.Scene.WorldHeight - cam.orthographicSize);
         cam.transform.position = new Vector3(cx, cy, -10f);
 
         var rt = new RenderTexture(w, h, 24, RenderTextureFormat.ARGB32) { filterMode = FilterMode.Point };

@@ -81,6 +81,13 @@ namespace XianXia.World
                 LoadSprite("hero_right"),
                 LoadSprite("hero_back"),
                 LoadSprite("hero_left"));
+            walker.SetWalkDown(new[]
+            {
+                LoadSprite("hero_walk_down_0"),
+                LoadSprite("hero_walk_down_1"),
+                LoadSprite("hero_walk_down_2"),
+                LoadSprite("hero_walk_down_3")
+            });
 
             PlayerTransform = playerGo.transform;
         }

@@ -10,21 +10,20 @@ namespace XianXia
         public int value;
     }
 
-    // 玩家存档的全部数据。只有这里的东西会被写进存档文件，
-    // 所以想存什么，就加到这儿。
+    // 玩家存档的全部数据。只有这里的东西会被写进存档文件，所以想存什么就加到这儿。
     [Serializable]
     public class GameState
     {
-        public string playerName = "无名散修";
-        public int realmIndex;
-        public int cultivation;
+        public string playerName = "无名";
+
+        public int level = 1;
+        public int exp;
         public int hp = 100;
-        public int spiritStones = 10;
-        public int turn;
+        public int maxHp = 100;
 
         public List<FlagEntry> flags = new List<FlagEntry>();
-        public List<string> techniques = new List<string>();
-        public List<string> finishedEvents = new List<string>();
+        public List<string> abilities = new List<string>();          // 已获得的异能 id
+        public List<string> usedInteractions = new List<string>();   // 已用过的一次性互动
 
         public int GetFlag(string key)
         {

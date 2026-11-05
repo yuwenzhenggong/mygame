@@ -6,28 +6,32 @@ namespace XianXia
     // 把所有 JSON 配置表读进内存，并提供按 id 查询。
     public class ContentLibrary
     {
-        public List<RealmDef> Realms = new List<RealmDef>();
-        public List<TechniqueDef> Techniques = new List<TechniqueDef>();
+        public List<AbilityDef> Abilities = new List<AbilityDef>();
+        public List<InteractionDef> Interactions = new List<InteractionDef>();
         public List<EventDef> Events = new List<EventDef>();
 
-        readonly Dictionary<string, TechniqueDef> _techById = new Dictionary<string, TechniqueDef>();
+        readonly Dictionary<string, AbilityDef> _abilityById = new Dictionary<string, AbilityDef>();
+        readonly Dictionary<string, InteractionDef> _interactionById = new Dictionary<string, InteractionDef>();
         readonly Dictionary<string, EventDef> _eventById = new Dictionary<string, EventDef>();
 
         public static ContentLibrary Load()
         {
             var lib = new ContentLibrary();
 
-            var realmTable = DataLoader.Load<RealmTable>("Data/realms");
-            if (realmTable != null && realmTable.realms != null) lib.Realms = realmTable.realms;
+            var abilityTable = DataLoader.Load<AbilityTable>("Data/abilities");
+            if (abilityTable != null && abilityTable.abilities != null) lib.Abilities = abilityTable.abilities;
 
-            var techTable = DataLoader.Load<TechniqueTable>("Data/techniques");
-            if (techTable != null && techTable.techniques != null) lib.Techniques = techTable.techniques;
+            var interactionTable = DataLoader.Load<InteractionTable>("Data/interactables");
+            if (interactionTable != null && interactionTable.interactables != null) lib.Interactions = interactionTable.interactables;
 
             var eventTable = DataLoader.Load<EventTable>("Data/events");
             if (eventTable != null && eventTable.events != null) lib.Events = eventTable.events;
 
-            foreach (var t in lib.Techniques)
-                if (t != null && !string.IsNullOrEmpty(t.id)) lib._techById[t.id] = t;
+            foreach (var a in lib.Abilities)
+                if (a != null && !string.IsNullOrEmpty(a.id)) lib._abilityById[a.id] = a;
+
+            foreach (var i in lib.Interactions)
+                if (i != null && !string.IsNullOrEmpty(i.id)) lib._interactionById[i.id] = i;
 
             foreach (var e in lib.Events)
                 if (e != null && !string.IsNullOrEmpty(e.id)) lib._eventById[e.id] = e;
@@ -35,11 +39,18 @@ namespace XianXia
             return lib;
         }
 
-        public TechniqueDef GetTechnique(string id)
+        public AbilityDef GetAbility(string id)
         {
             if (string.IsNullOrEmpty(id)) return null;
-            TechniqueDef t;
-            return _techById.TryGetValue(id, out t) ? t : null;
+            AbilityDef a;
+            return _abilityById.TryGetValue(id, out a) ? a : null;
+        }
+
+        public InteractionDef GetInteraction(string id)
+        {
+            if (string.IsNullOrEmpty(id)) return null;
+            InteractionDef i;
+            return _interactionById.TryGetValue(id, out i) ? i : null;
         }
 
         public EventDef GetEvent(string id)

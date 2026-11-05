@@ -6,23 +6,24 @@ using UnityEngine;
 using UnityEngine.U2D;
 using XianXia;
 
-// 编辑期工具：生成主场景、配置工程、自我检查。
+// 编辑期工具：生成主场景、配置工程、自我检查、渲染预览图。
 // 命令行用法：
 //   Unity.exe -batchmode -quit -projectPath E:\mygame -executeMethod ProjectSetup.RunAll -logFile -
 public static class ProjectSetup
 {
     const string ScenePath = "Assets/Scenes/Main.unity";
 
-    [MenuItem("修仙 Demo/生成主场景并配置工程")]
+    [MenuItem("都市异能 Demo/生成主场景并配置工程")]
     public static void RunFromMenu()
     {
         SetupScene();
         SetupPlayer();
+        ReimportArt();
+        ReimportFonts();
         AssetDatabase.SaveAssets();
-        Debug.Log("[ProjectSetup] 场景与工程设置已生成。");
+        Debug.Log("[Setup] 场景与工程设置已生成。");
     }
 
-    // 命令行入口：配置 + 自检，任一失败则以非 0 退出码结束
     public static void RunAll()
     {
         int failures = 0;
@@ -89,7 +90,7 @@ public static class ProjectSetup
     static void SetupPlayer()
     {
         PlayerSettings.companyName = "MyGame";
-        PlayerSettings.productName = "修仙 Demo";
+        PlayerSettings.productName = "都市异能 Demo";
 
         // 窗口分辨率必须是基准分辨率的整数倍，否则像素会被插值糊掉
         PlayerSettings.defaultScreenWidth = PixelArtSettings.ReferenceWidth * 2;
@@ -98,7 +99,6 @@ public static class ProjectSetup
         PlayerSettings.resizableWindow = true;
         PlayerSettings.runInBackground = true;
 
-        // 关掉所有质量等级的抗锯齿
         try
         {
             int original = QualitySettings.GetQualityLevel();
@@ -116,7 +116,6 @@ public static class ProjectSetup
         }
     }
 
-    // 强制重导美术资源，让 PixelArtImporter 的像素设置立刻生效（不然要等 Unity 自己重导）
     static void ReimportArt()
     {
         var folder = PixelArtSettings.ArtRoot.TrimEnd('/');
@@ -124,13 +123,11 @@ public static class ProjectSetup
 
         var guids = AssetDatabase.FindAssets("t:Texture2D", new[] { folder });
         foreach (var guid in guids)
-        {
             AssetDatabase.ImportAsset(AssetDatabase.GUIDToAssetPath(guid), ImportAssetOptions.ForceUpdate);
-        }
+
         Debug.Log("[Setup] 已重导美术资源 " + guids.Length + " 张");
     }
 
-    // 强制重导字体，让 PixelFontImporter 的关抗锯齿设置生效
     static void ReimportFonts()
     {
         const string folder = "Assets/Resources/Fonts";
@@ -138,50 +135,48 @@ public static class ProjectSetup
 
         var guids = AssetDatabase.FindAssets("t:Font", new[] { folder });
         foreach (var guid in guids)
-        {
             AssetDatabase.ImportAsset(AssetDatabase.GUIDToAssetPath(guid), ImportAssetOptions.ForceUpdate);
-        }
+
         Debug.Log("[Setup] 已重导字体 " + guids.Length + " 个");
     }
 
-    // 不依赖 UI 的逻辑自检：配置表能读、修行能涨、突破能成、事件能结算、存档能往返。
+    // 不依赖 UI 的逻辑自检
     static int SelfCheck()
     {
         int failures = 0;
 
         var content = XianXia.ContentLibrary.Load();
-        if (content == null || content.Realms.Count == 0)
+        if (content == null || content.Events.Count == 0)
         {
-            Debug.LogError("[SelfCheck] 境界表为空或读取失败");
+            Debug.LogError("[SelfCheck] 事件表为空或读取失败");
             return 1;
         }
 
-        Debug.Log("[SelfCheck] 境界 " + content.Realms.Count + " 条 / 功法 " + content.Techniques.Count +
-                  " 条 / 事件 " + content.Events.Count + " 个");
+        Debug.Log("[SelfCheck] 异能 " + content.Abilities.Count + " 个 / 互动点 " + content.Interactions.Count +
+                  " 个 / 事件 " + content.Events.Count + " 个");
 
-        if (content.Techniques.Count == 0) { Debug.LogError("[SelfCheck] 功法表为空"); failures++; }
-        if (content.Events.Count == 0) { Debug.LogError("[SelfCheck] 事件表为空"); failures++; }
+        if (content.Abilities.Count == 0) { Debug.LogError("[SelfCheck] 异能表为空"); failures++; }
+        if (content.Interactions.Count == 0) { Debug.LogError("[SelfCheck] 互动点为空"); failures++; }
 
-        var session = new XianXia.GameSession(content, new XianXia.GameState());
-        if (!session.LearnTechnique("t_basic")) { Debug.LogError("[SelfCheck] 学习初始功法失败"); failures++; }
-
-        int before = session.State.cultivation;
-        var gain = session.Cultivate();
-        if (session.State.cultivation <= before) { Debug.LogError("[SelfCheck] 修炼没有增加修为: " + gain); failures++; }
-
-        session.State.cultivation = 999999;
-        var bt = session.TryBreakthrough();
-        if (!bt.ok || session.State.realmIndex != 1)
+        // 1) 互动点引用的东西必须存在
+        foreach (var def in content.Interactions)
         {
-            Debug.LogError("[SelfCheck] 突破失败: " + bt.text);
-            failures++;
-        }
-        else
-        {
-            Debug.Log("[SelfCheck] 突破 OK -> " + session.CurrentRealm.name);
+            if (def == null) continue;
+
+            if (content.GetEvent(def.eventId) == null)
+            {
+                Debug.LogError("[SelfCheck] 互动点 " + def.id + " 引用了不存在的事件: " + def.eventId);
+                failures++;
+            }
+
+            if (!string.IsNullOrEmpty(def.requireAbility) && content.GetAbility(def.requireAbility) == null)
+            {
+                Debug.LogError("[SelfCheck] 互动点 " + def.id + " 需要不存在的异能: " + def.requireAbility);
+                failures++;
+            }
         }
 
-        // 事件：所有事件的选项都要能结算，且引用的功法 id 必须存在
+        // 2) 事件效果引用的异能 / 事件必须存在
         foreach (var ev in content.Events)
         {
             if (ev == null || ev.options == null) continue;
@@ -189,12 +184,13 @@ public static class ProjectSetup
             foreach (var opt in ev.options)
             {
                 if (opt == null || opt.effects == null) continue;
+
                 foreach (var ef in opt.effects)
                 {
                     if (ef == null) continue;
-                    if (ef.type == "learn" && content.GetTechnique(ef.key) == null)
+                    if (ef.type == "ability" && content.GetAbility(ef.key) == null)
                     {
-                        Debug.LogError("[SelfCheck] 事件 " + ev.id + " 引用了不存在的功法: " + ef.key);
+                        Debug.LogError("[SelfCheck] 事件 " + ev.id + " 引用了不存在的异能: " + ef.key);
                         failures++;
                     }
                     if (ef.type == "goto" && content.GetEvent(ef.key) == null)
@@ -205,17 +201,83 @@ public static class ProjectSetup
                 }
             }
 
-            if (ev.options.Count > 0)
+            if (ev.options != null && ev.options.Count > 0)
             {
                 var probe = new XianXia.GameSession(content, new XianXia.GameState());
                 probe.ResolveOption(ev, ev.options[0]);
             }
         }
 
-        // 存档往返
-        var toSave = new XianXia.GameState { playerName = "测试者", realmIndex = 2, cultivation = 1234, spiritStones = 77 };
+        // 3) 经验与升级
+        var session = new XianXia.GameSession(content, new XianXia.GameState());
+        int levelBefore = session.Level;
+        session.GainExp(session.ExpToNext + 5);
+        if (session.Level != levelBefore + 1)
+        {
+            Debug.LogError("[SelfCheck] 经验够了却没有升级: " + levelBefore + " -> " + session.Level);
+            failures++;
+        }
+        else
+        {
+            Debug.Log("[SelfCheck] 升级 OK -> Lv." + session.Level + "（生命上限 " + session.MaxHp + "）");
+        }
+
+        // 4) 学异能 & 生命上限加成
+        int maxHpBefore = session.MaxHp;
+        session.LearnAbility("a_force");
+        if (!session.HasAbility("a_force"))
+        {
+            Debug.LogError("[SelfCheck] 学习异能失败");
+            failures++;
+        }
+        else if (session.MaxHp <= maxHpBefore)
+        {
+            Debug.LogError("[SelfCheck] 念力没有提升生命上限: " + maxHpBefore + " -> " + session.MaxHp);
+            failures++;
+        }
+
+        // 5) 一次性互动：用过之后应该不可用
+        var onceDef = content.GetInteraction("i_sign");
+        if (onceDef != null)
+        {
+            string reason;
+            if (!session.IsInteractionAvailable(onceDef, out reason))
+            {
+                Debug.LogError("[SelfCheck] 一次性互动初始就不可用: " + reason);
+                failures++;
+            }
+            session.MarkInteractionUsed(onceDef);
+            if (session.IsInteractionAvailable(onceDef, out reason))
+            {
+                Debug.LogError("[SelfCheck] 一次性互动用过后仍然可用");
+                failures++;
+            }
+        }
+
+        // 6) 条件互动：地铁口需要灵视
+        var subway = content.GetInteraction("i_subway");
+        if (subway != null)
+        {
+            string reason;
+            var fresh = new XianXia.GameSession(content, new XianXia.GameState());
+            if (fresh.IsInteractionAvailable(subway, out reason))
+            {
+                Debug.LogError("[SelfCheck] 没异能时地铁口不该可用");
+                failures++;
+            }
+            fresh.LearnAbility("a_sight");
+            if (!fresh.IsInteractionAvailable(subway, out reason))
+            {
+                Debug.LogError("[SelfCheck] 有灵视后地铁口仍不可用: " + reason);
+                failures++;
+            }
+        }
+
+        // 7) 存档往返
+        var toSave = new XianXia.GameState { playerName = "测试者", level = 3, exp = 42, hp = 55, maxHp = 120 };
         toSave.SetFlag("foo", 1);
-        toSave.techniques.Add("t_sword");
+        toSave.abilities.Add("a_force");
+        toSave.usedInteractions.Add("i_sign");
 
         if (!XianXia.SaveSystem.Save(toSave))
         {
@@ -230,74 +292,20 @@ public static class ProjectSetup
                 Debug.LogError("[SelfCheck] 读档失败");
                 failures++;
             }
-            else if (loaded.realmIndex != 2 || loaded.cultivation != 1234 ||
-                     loaded.spiritStones != 77 || !loaded.HasFlag("foo") ||
-                     loaded.techniques.Count != 1)
+            else if (loaded.level != 3 || loaded.exp != 42 || loaded.hp != 55 || loaded.maxHp != 120 ||
+                     !loaded.HasFlag("foo") || loaded.abilities.Count != 1 || loaded.usedInteractions.Count != 1)
             {
                 Debug.LogError("[SelfCheck] 存档往返数据不一致: " + JsonUtility.ToJson(loaded));
                 failures++;
             }
             else
             {
-                Debug.Log("[SelfCheck] 存档往返 OK -> " + XianXia.SaveSystem.SavePath);
+                Debug.Log("[SelfCheck] 存档往返 OK");
                 XianXia.SaveSystem.Delete();
             }
         }
 
-        // 事件筛选：不符合 require 的事件不该被抽到
-        var fresh = new XianXia.GameSession(content, new XianXia.GameState());
-        if (fresh.IsEligible(content.GetEvent("e_inheritance")))
-        {
-            Debug.LogError("[SelfCheck] 未满足条件的事件被判定为可选");
-            failures++;
-        }
-
-        // 像素美术管线检查：精灵存在、PPU 一致、过滤方式是 Point
-        string[] spriteNames = { "city_street", "hero_front", "hero_right", "hero_back", "hero_left" };
-        int spriteOk = 0;
-
-        foreach (var spriteName in spriteNames)
-        {
-            var sprite = Resources.Load<Sprite>(PixelArtSettings.ArtResourceRoot + spriteName);
-            if (sprite == null)
-            {
-                Debug.LogError("[SelfCheck] 找不到精灵: " + PixelArtSettings.ArtResourceRoot + spriteName);
-                failures++;
-                continue;
-            }
-
-            if (Mathf.Abs(sprite.pixelsPerUnit - PixelArtSettings.PixelsPerUnit) > 0.01f)
-            {
-                Debug.LogError("[SelfCheck] " + spriteName + " 的 PPU = " + sprite.pixelsPerUnit +
-                               "，应为 " + PixelArtSettings.PixelsPerUnit);
-                failures++;
-            }
-
-            if (sprite.texture.filterMode != FilterMode.Point)
-            {
-                Debug.LogError("[SelfCheck] " + spriteName + " 的 FilterMode = " + sprite.texture.filterMode + "，应为 Point");
-                failures++;
-            }
-
-            spriteOk++;
-        }
-
-        Debug.Log("[SelfCheck] 像素精灵 " + spriteOk + "/" + spriteNames.Length +
-                  " 张通过（PPU=" + PixelArtSettings.PixelsPerUnit +
-                  "，基准 " + PixelArtSettings.ReferenceWidth + "x" + PixelArtSettings.ReferenceHeight + "）");
-
-        // 像素字体检查：有就用自己带的，没有就退回系统字体（不判失败，只是提示）
-        var fonts = Resources.LoadAll<Font>("Fonts");
-        if (fonts == null || fonts.Length == 0)
-        {
-            Debug.LogWarning("[SelfCheck] Resources/Fonts 下没有字体，会退回系统字体，中文可能不清晰");
-        }
-        else
-        {
-            Debug.Log("[SelfCheck] 像素字体已就绪: " + fonts[0].name + "（" + fonts.Length + " 个）");
-        }
-
-        // 场景检查：背景图存在、遮罩可解析、出生点可走且四周有路
+        // 8) 场景
         var scene = XianXia.World.SceneData.Load();
         if (scene == null)
         {
@@ -332,13 +340,52 @@ public static class ProjectSetup
             }
         }
 
+        // 9) 像素精灵
+        string[] spriteNames = { "city_street", "hero_front", "hero_right", "hero_back", "hero_left", "marker" };
+        int spriteOk = 0;
+
+        foreach (var spriteName in spriteNames)
+        {
+            var sprite = Resources.Load<Sprite>(PixelArtSettings.ArtResourceRoot + spriteName);
+            if (sprite == null)
+            {
+                Debug.LogError("[SelfCheck] 找不到精灵: " + PixelArtSettings.ArtResourceRoot + spriteName);
+                failures++;
+                continue;
+            }
+
+            if (Mathf.Abs(sprite.pixelsPerUnit - PixelArtSettings.PixelsPerUnit) > 0.01f)
+            {
+                Debug.LogError("[SelfCheck] " + spriteName + " 的 PPU = " + sprite.pixelsPerUnit +
+                               "，应为 " + PixelArtSettings.PixelsPerUnit);
+                failures++;
+            }
+
+            if (sprite.texture.filterMode != FilterMode.Point)
+            {
+                Debug.LogError("[SelfCheck] " + spriteName + " 的 FilterMode = " + sprite.texture.filterMode + "，应为 Point");
+                failures++;
+            }
+
+            spriteOk++;
+        }
+
+        Debug.Log("[SelfCheck] 像素精灵 " + spriteOk + "/" + spriteNames.Length + " 张通过");
+
+        // 10) 字体
+        var fonts = Resources.LoadAll<Font>("Fonts");
+        if (fonts == null || fonts.Length == 0)
+            Debug.LogWarning("[SelfCheck] Resources/Fonts 下没有字体，会退回系统字体");
+        else
+            Debug.Log("[SelfCheck] 像素字体已就绪: " + fonts[0].name);
+
         Debug.Log("[SelfCheck] 完成，失败项 = " + failures);
         return failures;
     }
 
-    // 把世界渲染成一张 640x360 的 PNG，用来检查像素比例、精灵排序、Tilemap 是否画得出来。
+    // 把世界渲染成一张 640x360 的 PNG，用来检查像素比例、精灵排序、背景图是否画得出来。
     // 命令行：-executeMethod ProjectSetup.CaptureWorldPreview
-    [MenuItem("修仙 Demo/渲染世界预览图")]
+    [MenuItem("都市异能 Demo/渲染世界预览图")]
     public static void CaptureWorldPreview()
     {
         EditorSceneManager.OpenScene(ScenePath, OpenSceneMode.Single);
@@ -351,6 +398,11 @@ public static class ProjectSetup
             return;
         }
 
+        // 先建 HUD：WorldRoot 需要在 GameUI 之后建互动系统
+        var uiGo = new GameObject("__PreviewUI");
+        var gameUI = uiGo.AddComponent<XianXia.UI.GameUI>();
+        gameUI.Initialize();
+
         var rootGo = new GameObject("__PreviewWorld");
         var world = rootGo.AddComponent<XianXia.World.WorldRoot>();
         world.Build();
@@ -362,11 +414,7 @@ public static class ProjectSetup
             return;
         }
 
-        // 顺便把 HUD 也建出来。ScreenSpaceOverlay 的 Canvas 相机拍不到，
-        // 所以临时改成 ScreenSpaceCamera 才能一起进截图。
-        var uiGo = new GameObject("__PreviewUI");
-        var gameUI = uiGo.AddComponent<XianXia.UI.GameUI>();
-        gameUI.Initialize();   // 编辑模式下 Awake 不会跑，得手动初始化
+        // ScreenSpaceOverlay 的 Canvas 相机拍不到，临时改成 ScreenSpaceCamera 才能一起进截图
         var canvas = uiGo.GetComponentInChildren<Canvas>();
         if (canvas != null)
         {

@@ -7,17 +7,23 @@ namespace XianXia.UI
 {
     // HUD 与交互界面。挂在 GameRoot 上，由 Bootstrap 自动创建。
     // 布局按 640x360 逻辑像素算，窗口放大 2 倍 = 1280x720。
-    // 注意：这里不再画背景——背景就是世界本身（地图），HUD 只做叠加。
     public class GameUI : MonoBehaviour
     {
-        const int MaxLogLines = 5;
+        const int MaxLogLines = 4;
 
-        ContentLibrary _content;
-        GameSession _session;
+        public static GameUI Instance { get; private set; }
+
+        public ContentLibrary Content { get; private set; }
+        public GameSession Session { get; private set; }
+
         readonly List<string> _log = new List<string>();
 
         Text _statusText;
         Text _logText;
+        Text _promptText;
+
+        RectTransform _hudRoot;
+        bool _hudVisible;
 
         RectTransform _eventPanel;
         Text _eventTitle;
@@ -28,7 +34,13 @@ namespace XianXia.UI
 
         void Awake()
         {
+            Instance = this;
             Initialize();
+        }
+
+        void OnDestroy()
+        {
+            if (Instance == this) Instance = null;
         }
 
         // 单独抽出来，好让编辑器预览/测试能在非运行状态下建界面
@@ -38,11 +50,11 @@ namespace XianXia.UI
             _initialized = true;
 
             BuildUI();
-            _content = ContentLibrary.Load();
+            Content = ContentLibrary.Load();
 
-            if (_content == null || _content.Realms.Count == 0)
+            if (Content == null || Content.Events.Count == 0)
             {
-                AppendLog("<color=#ff6b6b>配置表加载失败：检查 Assets/Resources/Data/ 下的 json 文件。</color>");
+                AppendLog("<color=#ff6b6b>配置表加载失败：检查 Assets/Resources/Data/ 下的 json。</color>");
                 Refresh();
                 return;
             }
@@ -64,16 +76,19 @@ namespace XianXia.UI
             scaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
             scaler.referenceResolution = new Vector2(PixelArtSettings.ReferenceWidth, PixelArtSettings.ReferenceHeight);
             scaler.matchWidthOrHeight = 0.5f;
-            // 和精灵的 Pixels Per Unit 对齐，32px 的图在 UI 里就是 32 逻辑像素
             scaler.referencePixelsPerUnit = PixelArtSettings.PixelsPerUnit;
 
+            // 平时隐藏的 HUD 容器：状态栏、日志、按钮都挂在这下面，ESC 整体开关
+            var hud = UIFactory.NewRect("Hud", canvasGo.transform);
+            UIFactory.Stretch(hud, 0f, 0f, 0f, 0f);
+            _hudRoot = hud;
+
             // 顶部状态栏
-            var statusPanel = UIFactory.NewImage("StatusPanel", canvasGo.transform, new Color(0.05f, 0.06f, 0.08f, 0.82f));
+            var statusPanel = UIFactory.NewImage("StatusPanel", hud, new Color(0.05f, 0.06f, 0.08f, 0.82f));
             statusPanel.raycastTarget = false;
             UIFactory.Anchor(statusPanel.rectTransform, new Vector2(0f, 1f), new Vector2(1f, 1f),
-                new Vector2(12f, -76f), new Vector2(-12f, -12f));
+                new Vector2(12f, -88f), new Vector2(-12f, -12f));
 
-            // 立绘：用主角的正面图（48x64 原尺寸显示，1:1 映射到逻辑像素最清晰）
             var hero = UIFactory.NewSpriteImage("Hero", statusPanel.transform, "hero_front", Color.white);
             hero.raycastTarget = false;
             var heroRt = hero.rectTransform;
@@ -87,23 +102,33 @@ namespace XianXia.UI
                 new Color(0.86f, 0.89f, 0.95f), TextAnchor.MiddleLeft);
             UIFactory.Stretch(_statusText.rectTransform, 56f, 4f, 150f, 4f);
 
-            var hint = UIFactory.NewText("Hint", statusPanel.transform, "WASD / 方向键 移动", UIFactory.SizeSmall,
+            var hint = UIFactory.NewText("Hint", statusPanel.transform, "WASD 移动 · E 互动", UIFactory.SizeSmall,
                 new Color(0.60f, 0.66f, 0.76f), TextAnchor.MiddleRight);
             UIFactory.Anchor(hint.rectTransform, new Vector2(1f, 0f), new Vector2(1f, 1f),
-                new Vector2(-142f, 0f), new Vector2(-8f, 0f));
+                new Vector2(-150f, 0f), new Vector2(-8f, 0f));
 
             // 左下日志
-            var logPanel = UIFactory.NewImage("LogPanel", canvasGo.transform, new Color(0.05f, 0.06f, 0.08f, 0.74f));
+            var logPanel = UIFactory.NewImage("LogPanel", hud, new Color(0.05f, 0.06f, 0.08f, 0.74f));
             logPanel.raycastTarget = false;
             UIFactory.Anchor(logPanel.rectTransform, new Vector2(0f, 0f), new Vector2(0f, 0f),
-                new Vector2(12f, 68f), new Vector2(332f, 148f));
+                new Vector2(12f, 88f), new Vector2(332f, 168f));
 
             _logText = UIFactory.NewText("LogText", logPanel.transform, "", UIFactory.SizeNormal,
                 new Color(0.82f, 0.85f, 0.90f), TextAnchor.LowerLeft);
             UIFactory.Stretch(_logText.rectTransform, 8f, 6f, 8f, 6f);
 
+            // 互动提示（按钮栏正上方）
+            _promptText = UIFactory.NewText("Prompt", canvasGo.transform, "", UIFactory.SizeNormal,
+                new Color(0.90f, 0.95f, 1f), TextAnchor.MiddleCenter);
+            var promptRt = _promptText.rectTransform;
+            promptRt.anchorMin = new Vector2(0.5f, 0f);
+            promptRt.anchorMax = new Vector2(0.5f, 0f);
+            promptRt.pivot = new Vector2(0.5f, 0f);
+            promptRt.sizeDelta = new Vector2(360f, 16f);
+            promptRt.anchoredPosition = new Vector2(0f, 64f);
+
             // 底部按钮栏
-            var bar = UIFactory.NewRect("ButtonBar", canvasGo.transform);
+            var bar = UIFactory.NewRect("ButtonBar", hud);
             UIFactory.Anchor(bar, new Vector2(0f, 0f), new Vector2(1f, 0f),
                 new Vector2(12f, 12f), new Vector2(-12f, 60f));
 
@@ -115,14 +140,31 @@ namespace XianXia.UI
             layout.childForceExpandWidth = true;
             layout.childForceExpandHeight = true;
 
-            AddBarButton(bar, "修炼", OnCultivate);
-            AddBarButton(bar, "突破", OnBreakthrough);
-            AddBarButton(bar, "游历", OnTravel);
             AddBarButton(bar, "存档", OnSave);
             AddBarButton(bar, "读档", OnLoad);
             AddBarButton(bar, "重开", OnRestart);
 
             BuildEventPanel(canvasGo.transform);
+
+            // 默认收起：一进游戏就是干净的画面，只留互动提示
+            hud.gameObject.SetActive(false);
+            _hudVisible = false;
+        }
+
+        void Update()
+        {
+            if (!Input.GetKeyDown(KeyCode.Escape)) return;
+
+            // 事件弹窗开着的时候，ESC 不去动 HUD，免得把正在读的文本关掉
+            if (_eventPanel != null && _eventPanel.gameObject.activeSelf) return;
+
+            ToggleHud();
+        }
+
+        public void ToggleHud()
+        {
+            _hudVisible = !_hudVisible;
+            if (_hudRoot != null) _hudRoot.gameObject.SetActive(_hudVisible);
         }
 
         void AddBarButton(RectTransform parent, string label, UnityEngine.Events.UnityAction action)
@@ -130,7 +172,7 @@ namespace XianXia.UI
             var btn = UIFactory.NewButton(label, parent, label, UIFactory.SizeNormal, action);
             var le = btn.gameObject.AddComponent<LayoutElement>();
             le.flexibleWidth = 1f;
-            le.minWidth = 48f;
+            le.minWidth = 60f;
         }
 
         void BuildEventPanel(Transform canvasRoot)
@@ -173,67 +215,27 @@ namespace XianXia.UI
             _eventPanel.gameObject.SetActive(false);
         }
 
-        // ---------------- 行动 ----------------
+        // ---------------- 游戏流程 ----------------
 
         void NewGame()
         {
             _log.Clear();
-            _session = new GameSession(_content, new GameState());
-            _session.LearnTechnique("t_basic");
-
-            AppendLog("你生于青云山下的小村，自幼能感灵气。");
-            AppendLog("WASD 走动，「修炼」积修为，「游历」遇事。");
+            Session = new GameSession(Content, new GameState());
+            AppendLog("你在街上醒来，不记得自己是怎么到的这里。");
+            AppendLog("走近发光的东西，按 E 互动。");
             Refresh();
-        }
-
-        // 气血归零后不再允许行动，必须重开
-        bool BlockIfDead()
-        {
-            if (_session == null || !_session.IsDead) return false;
-            AppendLog("<color=#ff6b6b>你气血耗尽，魂归天地。点「重开」再入轮回。</color>");
-            Refresh();
-            return true;
-        }
-
-        void OnCultivate()
-        {
-            if (BlockIfDead()) return;
-            AppendLog(_session.Cultivate());
-            Refresh();
-        }
-
-        void OnBreakthrough()
-        {
-            if (BlockIfDead()) return;
-            var r = _session.TryBreakthrough();
-            AppendLog(r.ok ? "<color=#7ee787>" + r.text + "</color>" : "<color=#ffa657>" + r.text + "</color>");
-            Refresh();
-        }
-
-        void OnTravel()
-        {
-            if (BlockIfDead()) return;
-
-            var ev = _session.PickEvent();
-            if (ev == null)
-            {
-                AppendLog("四下无事，你走了半日，一无所获。");
-                Refresh();
-                return;
-            }
-            ShowEvent(ev);
         }
 
         void OnSave()
         {
-            if (_session == null) return;
-            AppendLog(SaveSystem.Save(_session.State) ? "<color=#6ec1ff>已存档。</color>" : "<color=#ff6b6b>存档失败，看 Console。</color>");
+            if (Session == null) return;
+            AppendLog(SaveSystem.Save(Session.State) ? "<color=#6ec1ff>已存档。</color>" : "<color=#ff6b6b>存档失败，看 Console。</color>");
             Refresh();
         }
 
         void OnLoad()
         {
-            if (_session == null) return;
+            if (Content == null) return;
 
             var state = SaveSystem.Load();
             if (state == null)
@@ -243,33 +245,28 @@ namespace XianXia.UI
                 return;
             }
 
-            _session = new GameSession(_content, state);
+            Session = new GameSession(Content, state);
             AppendLog("<color=#6ec1ff>已读档。</color>");
             Refresh();
         }
 
         void OnRestart()
         {
+            if (Content == null) return;
             NewGame();
         }
 
         // ---------------- 事件面板 ----------------
 
-        void ShowEvent(EventDef ev)
+        public void ShowEvent(EventDef ev)
         {
-            if (_eventPanel == null) return;
+            if (_eventPanel == null || ev == null) return;
 
             _eventPanel.gameObject.SetActive(true);
             _eventTitle.text = ev.title;
             _eventBody.text = ev.text;
 
-            // 先隐藏再销毁：Destroy 要等到帧末才生效，不隐藏的话旧按钮会闪一下、还能被误点
-            for (int i = _eventOptions.childCount - 1; i >= 0; i--)
-            {
-                var child = _eventOptions.GetChild(i).gameObject;
-                child.SetActive(false);
-                Destroy(child);
-            }
+            ClearOptionButtons();
 
             var opts = ev.options ?? new List<EventOption>();
             foreach (var opt in opts)
@@ -295,21 +292,61 @@ namespace XianXia.UI
 
         void OnChoose(EventDef ev, EventOption opt)
         {
-            var result = _session.ResolveOption(ev, opt);
+            var result = Session.ResolveOption(ev, opt);
             if (!string.IsNullOrEmpty(result.text)) AppendLog(result.text);
-            if (_session.IsDead) AppendLog("<color=#ff6b6b>你气血耗尽，魂归天地。点「重开」再入轮回。</color>");
             Refresh();
 
             if (!string.IsNullOrEmpty(result.nextEventId))
             {
-                var next = _content.GetEvent(result.nextEventId);
+                var next = Content.GetEvent(result.nextEventId);
                 if (next != null)
                 {
                     ShowEvent(next);
                     return;
                 }
             }
-            CloseEvent();
+
+            var shown = result.text;
+            if (Session.IsDead) shown += "\n\n<color=#ff6b6b>你倒下了。按 ESC 打开界面，点「重开」。</color>";
+            if (string.IsNullOrEmpty(shown))
+            {
+                CloseEvent();
+                return;
+            }
+
+            AppendLog(shown);
+            ShowResult(ev.title, shown);
+        }
+
+        // 结果直接显示在弹窗里。HUD 平时是隐藏的，日志看不见，
+        // 所以不能让玩家选完了没有任何反馈。
+        void ShowResult(string title, string text)
+        {
+            if (_eventPanel == null) return;
+
+            _eventPanel.gameObject.SetActive(true);
+            _eventTitle.text = title;
+            _eventBody.text = text;
+
+            ClearOptionButtons();
+
+            var btn = UIFactory.NewButton("Option", _eventOptions, "继续", UIFactory.SizeNormal, CloseEvent);
+            var le = btn.gameObject.AddComponent<LayoutElement>();
+            le.minHeight = 34f;
+            le.preferredHeight = 34f;
+
+            Refresh();
+        }
+
+        void ClearOptionButtons()
+        {
+            // 先隐藏再销毁：Destroy 要等到帧末才生效，不隐藏的话旧按钮会闪一下、还能被误点
+            for (int i = _eventOptions.childCount - 1; i >= 0; i--)
+            {
+                var child = _eventOptions.GetChild(i).gameObject;
+                child.SetActive(false);
+                Destroy(child);
+            }
         }
 
         void CloseEvent()
@@ -318,9 +355,14 @@ namespace XianXia.UI
             Refresh();
         }
 
-        // ---------------- 杂项 ----------------
+        // ---------------- 对外 ----------------
 
-        void AppendLog(string line)
+        public void SetPrompt(string text)
+        {
+            if (_promptText != null) _promptText.text = text ?? string.Empty;
+        }
+
+        public void AppendLog(string line)
         {
             if (string.IsNullOrEmpty(line)) return;
             _log.Add(line);
@@ -329,12 +371,12 @@ namespace XianXia.UI
 
         void Refresh()
         {
-            if (_statusText != null && _session != null) _statusText.text = _session.StatusText();
+            if (_statusText != null && Session != null) _statusText.text = Session.StatusText();
             if (_logText != null) _logText.text = string.Join("\n", _log.ToArray());
 
-            // 事件面板开着、或者人已经死了 → 冻结走动
+            // 事件面板开着、或者人已经倒下 → 冻结走动和互动
             bool modalOpen = _eventPanel != null && _eventPanel.gameObject.activeSelf;
-            GameFlow.IsBlocked = modalOpen || (_session != null && _session.IsDead);
+            GameFlow.IsBlocked = modalOpen || (Session != null && Session.IsDead);
         }
     }
 }

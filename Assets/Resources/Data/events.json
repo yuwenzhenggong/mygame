@@ -1,186 +1,108 @@
 {
   "events": [
     {
-      "id": "e_old_man",
-      "title": "山道老者",
-      "text": "山道旁坐着一位衣衫褴褛的老者，面前摆着一只破碗。他抬头看你，目光却不像乞丐。",
-      "weight": 12,
+      "id": "e_lamp",
+      "title": "路灯",
+      "text": "你站在灯下。地上有两道影子，一道是你的，另一道……慢半拍。",
       "options": [
         {
-          "text": "施舍灵石",
-          "resultText": "老者收下灵石，随手在你掌心点了一下，一股热流窜入经脉。",
-          "effects": [
-            { "type": "stat", "key": "spiritStones", "value": -5 },
-            { "type": "stat", "key": "cultivation", "value": 40 }
-          ]
+          "text": "回头看",
+          "resultText": "身后空无一人。影子重新和你贴合，像什么都没发生。",
+          "effects": [{ "type": "exp", "value": 40 }]
         },
         {
-          "text": "视而不见",
-          "resultText": "你从他身边走过。身后传来一声轻笑。",
-          "effects": []
-        },
-        {
-          "text": "问其来历",
-          "resultText": "老者摇头不答，只在你眉心一点：「记着，莫要急。」你心头一震。",
+          "text": "站着不动，等它先动",
+          "resultText": "你盯了它很久。它也在盯你。某种东西在你眼底裂开了一条缝。",
           "effects": [
-            { "type": "flag", "key": "met_old_man", "value": 1 },
-            { "type": "stat", "key": "cultivation", "value": 15 }
+            { "type": "exp", "value": 30 },
+            { "type": "ability", "key": "a_sight" }
           ]
         }
       ]
     },
     {
-      "id": "e_herb",
-      "title": "灵草",
-      "text": "崖壁缝隙里长着一株泛着微光的灵草，四周带着淡淡的腥气。",
-      "weight": 15,
+      "id": "e_vending",
+      "title": "自动售货机",
+      "text": "售货机的屏幕亮着，没有商品目录，只有一行字：「检测到异常个体」。",
       "options": [
         {
-          "text": "小心采摘",
-          "resultText": "你屏住呼吸摘下灵草，卖与坊市，得灵石若干。",
+          "text": "投币",
+          "resultText": "机器吐出一罐没有标签的饮料。打开后有股金属味。",
           "effects": [
-            { "type": "stat", "key": "spiritStones", "value": 18 }
+            { "type": "hp", "value": 15 },
+            { "type": "exp", "value": 20 }
           ]
         },
         {
-          "text": "直接吞服",
-          "resultText": "药力在体内炸开，你难受了半日，却也化开不少。",
+          "text": "把手贴在屏幕上",
+          "resultText": "屏幕凉得不像话。一股力从掌心涌出来，铁皮应声凹进去一块。",
           "effects": [
-            { "type": "stat", "key": "cultivation", "value": 55 },
-            { "type": "stat", "key": "hp", "value": -20 }
-          ]
-        },
-        {
-          "text": "留给后来人",
-          "resultText": "你转身离开。山风拂过，心底倒有几分轻快。",
-          "effects": [
-            { "type": "stat", "key": "cultivation", "value": 10 }
+            { "type": "ability", "key": "a_force" },
+            { "type": "exp", "value": 50 }
           ]
         }
       ]
     },
     {
-      "id": "e_beast",
-      "title": "林中妖兽",
-      "text": "一头通体漆黑的山魈拦住去路，喉咙里滚出低吼。",
-      "weight": 18,
+      "id": "e_sign",
+      "title": "电子标牌",
+      "text": "标牌上循环播放着一则寻人启事。照片上的人是你。失踪日期是三年前的今天。",
       "options": [
         {
-          "text": "拔剑迎战",
-          "resultText": "一场恶斗，你身上多了几道血口，却也摸到几分搏杀的窍门。",
+          "text": "拍下来",
+          "resultText": "手机里只剩一张雪花。但你已经记住了那串日期。",
           "effects": [
-            { "type": "stat", "key": "hp", "value": -35 },
-            { "type": "stat", "key": "cultivation", "value": 70 }
+            { "type": "flag", "key": "knew_date", "value": 1 },
+            { "type": "exp", "value": 60 }
           ]
         },
         {
-          "text": "绕道而行",
-          "resultText": "你绕了个大圈，多走了半日路。",
-          "effects": []
-        }
-      ]
-    },
-    {
-      "id": "e_rob",
-      "title": "劫修",
-      "text": "两名蒙面修士从林间窜出，堵住了你的去路。",
-      "weight": 14,
-      "require": {
-        "minSpiritStones": 20
-      },
-      "options": [
-        {
-          "text": "交出灵石",
-          "resultText": "你把袋子丢过去，两人掂了掂，散了。",
+          "text": "站近一点听",
+          "resultText": "标牌发出极轻的声音——是几秒前你自己的脚步声。你不记得自己走过这里。",
           "effects": [
-            { "type": "stat", "key": "spiritStones", "value": -20 }
-          ]
-        },
-        {
-          "text": "拼死一搏",
-          "resultText": "你以伤势换了个惨胜，抢回了自己的灵石。",
-          "effects": [
-            { "type": "stat", "key": "hp", "value": -45 },
-            { "type": "stat", "key": "cultivation", "value": 60 }
+            { "type": "ability", "key": "a_echo" },
+            { "type": "exp", "value": 40 }
           ]
         }
       ]
     },
     {
-      "id": "e_market",
-      "title": "坊市",
-      "text": "坊市人声鼎沸，摊贩们吆喝着各种来路不明的东西。",
-      "weight": 14,
-      "require": {
-        "minSpiritStones": 30
-      },
+      "id": "e_bench",
+      "title": "长椅",
+      "text": "长椅上有一处凹陷，像是刚有人坐过。可长椅这一侧，积了很厚一层灰。",
       "options": [
         {
-          "text": "买一册无名功法（30 灵石）",
-          "resultText": "摊主笑得意味深长。你翻开册子，倒真有几分道理。",
+          "text": "坐下",
+          "resultText": "身侧的凹陷慢慢回弹。有什么东西站起来，走远了。你身上一阵发冷，伤口却在发热。",
           "effects": [
-            { "type": "learn", "key": "t_sword" },
-            { "type": "stat", "key": "spiritStones", "value": -30 }
+            { "type": "ability", "key": "a_heal" },
+            { "type": "hp", "value": -20 }
           ]
         },
         {
-          "text": "只逛逛",
-          "resultText": "你在坊市里转了一圈，听来不少传闻。",
-          "effects": []
+          "text": "走开",
+          "resultText": "你加快脚步。身后没有声音，但你确定那处凹陷变深了一点。",
+          "effects": [{ "type": "exp", "value": 25 }]
         }
       ]
     },
     {
-      "id": "e_cave",
-      "title": "废弃洞府",
-      "text": "山腹深处有一处半塌的洞府，石壁上刻着残破的符文。",
-      "weight": 6,
-      "onceOnly": true,
-      "require": {
-        "minRealm": 1
-      },
+      "id": "e_subway",
+      "title": "地铁口",
+      "text": "台阶一路往下，望不到底。风是从下面往上吹的，带着铁锈和消毒水的味道。",
       "options": [
         {
-          "text": "参悟石壁",
-          "resultText": "三日三夜，你于符文间悟出一门护体功法。",
+          "text": "走下去",
+          "resultText": "越往下，灯越少。走到第三层时你停住了——下面有人在叫你的名字。",
           "effects": [
-            { "type": "learn", "key": "t_iron_body" }
+            { "type": "exp", "value": 80 },
+            { "type": "flag", "key": "went_down", "value": 1 }
           ]
         },
         {
-          "text": "搜寻遗物",
-          "resultText": "你在石台暗格里找到一小袋灵石。",
-          "effects": [
-            { "type": "stat", "key": "spiritStones", "value": 60 }
-          ]
-        }
-      ]
-    },
-    {
-      "id": "e_inheritance",
-      "title": "前辈传承",
-      "text": "一位自称来自上界的女修拦下你：「你的根骨，我认得。」",
-      "weight": 8,
-      "onceOnly": true,
-      "require": {
-        "minRealm": 2,
-        "hasFlag": "met_old_man"
-      },
-      "options": [
-        {
-          "text": "跪下拜师",
-          "resultText": "她抬手虚扶：「不必跪。我只借你一缕气运。」你的功法豁然贯通。",
-          "effects": [
-            { "type": "learn", "key": "t_heaven" },
-            { "type": "stat", "key": "cultivation", "value": 200 }
-          ]
-        },
-        {
-          "text": "婉言谢绝",
-          "resultText": "她怔了一下，随即笑了：「倒是个有主意的。罢了。」",
-          "effects": [
-            { "type": "stat", "key": "cultivation", "value": 30 }
-          ]
+          "text": "退回来",
+          "resultText": "你退回地面，风还在吹。台阶上多了一行湿脚印，是往上走的。",
+          "effects": [{ "type": "exp", "value": 20 }]
         }
       ]
     }

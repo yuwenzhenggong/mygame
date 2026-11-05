@@ -1,0 +1,50 @@
+{
+  "interactables": [
+    {
+      "id": "i_lamp",
+      "name": "路灯",
+      "imageX": 920,
+      "imageY": 265,
+      "radius": 70,
+      "eventId": "e_lamp",
+      "onceOnly": false
+    },
+    {
+      "id": "i_vending",
+      "name": "自动售货机",
+      "imageX": 715,
+      "imageY": 250,
+      "radius": 80,
+      "eventId": "e_vending",
+      "onceOnly": false
+    },
+    {
+      "id": "i_sign",
+      "name": "电子标牌",
+      "imageX": 1132,
+      "imageY": 300,
+      "radius": 80,
+      "eventId": "e_sign",
+      "onceOnly": true
+    },
+    {
+      "id": "i_bench",
+      "name": "长椅",
+      "imageX": 1245,
+      "imageY": 305,
+      "radius": 80,
+      "eventId": "e_bench",
+      "onceOnly": true
+    },
+    {
+      "id": "i_subway",
+      "name": "地铁口",
+      "imageX": 752,
+      "imageY": 755,
+      "radius": 80,
+      "eventId": "e_subway",
+      "onceOnly": true,
+      "requireAbility": "a_sight"
+    }
+  ]
+}

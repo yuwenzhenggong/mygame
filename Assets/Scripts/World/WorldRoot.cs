@@ -2,7 +2,7 @@ using UnityEngine;
 
 namespace XianXia.World
 {
-    // 世界根节点：铺背景图、放玩家、挂相机跟随。
+    // 世界根节点：铺背景图、放玩家、摆互动标记、挂相机跟随。
     // 全部运行时用代码搭，不依赖场景里的 prefab。
     public class WorldRoot : MonoBehaviour
     {
@@ -30,6 +30,7 @@ namespace XianXia.World
 
             BuildBackdrop();
             BuildPlayer();
+            BuildInteractables();
             SetupCamera();
 
             Debug.Log("[World] 场景 " + Scene.ImageWidth + "x" + Scene.ImageHeight
@@ -82,6 +83,48 @@ namespace XianXia.World
                 LoadSprite("hero_left"));
 
             PlayerTransform = playerGo.transform;
+        }
+
+        void BuildInteractables()
+        {
+            var content = ContentLibrary.Load();
+            var markerSprite = LoadSprite("marker");
+            var entries = new System.Collections.Generic.List<Interactor.Entry>();
+
+            foreach (var def in content.Interactions)
+            {
+                if (def == null || string.IsNullOrEmpty(def.id)) continue;
+
+                var world = ImageToWorld(def.imageX, def.imageY);
+
+                var go = new GameObject("Marker_" + def.id);
+                go.transform.SetParent(transform, false);
+                go.transform.position = new Vector3(world.x, world.y, 0f);
+
+                var sr = go.AddComponent<SpriteRenderer>();
+                sr.sprite = markerSprite;
+                sr.sortingOrder = 5;
+
+                entries.Add(new Interactor.Entry
+                {
+                    Def = def,
+                    Marker = sr,
+                    WorldPosition = world
+                });
+            }
+
+            var interactor = PlayerTransform.gameObject.AddComponent<Interactor>();
+            interactor.SetEntries(entries);
+
+            Debug.Log("[World] 可互动对象 " + entries.Count + " 个");
+        }
+
+        // 场景图像素坐标 → 世界坐标（y 轴要翻转）
+        Vector2 ImageToWorld(int px, int py)
+        {
+            return new Vector2(
+                px / (float)PixelArtSettings.PixelsPerUnit,
+                (Scene.ImageHeight - py) / (float)PixelArtSettings.PixelsPerUnit);
         }
 
         Sprite LoadSprite(string name)

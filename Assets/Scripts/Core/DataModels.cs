@@ -6,40 +6,43 @@ namespace XianXia.Data
     // 配置表 DTO —— 字段名必须和 JSON 里的键完全一致。
     // JsonUtility 不支持 Dictionary，也不支持顶层数组，所以每个表都包一层。
 
+    // 异能
     [Serializable]
-    public class RealmTable
+    public class AbilityTable
     {
-        public List<RealmDef> realms = new List<RealmDef>();
+        public List<AbilityDef> abilities = new List<AbilityDef>();
     }
 
     [Serializable]
-    public class RealmDef
-    {
-        public string id;
-        public string name;
-        public int qiRequired;   // 突破到下一境界所需修为；最高境界填 0
-        public int maxHp;
-        public int baseAttack;
-        public string desc;
-    }
-
-    [Serializable]
-    public class TechniqueTable
-    {
-        public List<TechniqueDef> techniques = new List<TechniqueDef>();
-    }
-
-    [Serializable]
-    public class TechniqueDef
+    public class AbilityDef
     {
         public string id;
         public string name;
         public string desc;
-        public int attackBonus;
         public int maxHpBonus;
-        public int cultivateBonus;
     }
 
+    // 场景里可以互动的东西（售货机、长椅、地铁口……）
+    [Serializable]
+    public class InteractionTable
+    {
+        public List<InteractionDef> interactables = new List<InteractionDef>();
+    }
+
+    [Serializable]
+    public class InteractionDef
+    {
+        public string id;
+        public string name;
+        public int imageX;             // 场景图上的像素坐标
+        public int imageY;
+        public int radius = 72;        // 触发半径（像素）
+        public string eventId;         // 互动时播的事件
+        public bool onceOnly;          // 只能互动一次
+        public string requireAbility;  // 需要某个异能才能互动，留空表示无条件
+    }
+
+    // 事件
     [Serializable]
     public class EventTable
     {
@@ -52,20 +55,7 @@ namespace XianXia.Data
         public string id;
         public string title;
         public string text;
-        public int weight = 10;   // 随机权重，越大越容易出现
-        public bool onceOnly;     // true 表示一生只触发一次
-        public EventRequire require;
         public List<EventOption> options = new List<EventOption>();
-    }
-
-    [Serializable]
-    public class EventRequire
-    {
-        public int minRealm;
-        public int maxRealm;      // 0 或未填视为无上限
-        public int minSpiritStones;
-        public string hasFlag;
-        public string notFlag;
     }
 
     [Serializable]
@@ -80,8 +70,8 @@ namespace XianXia.Data
     [Serializable]
     public class Effect
     {
-        public string type;   // stat / flag / learn / goto
-        public string key;    // stat: hp|cultivation|spiritStones；flag: 标记名；learn: 功法 id；goto: 事件 id
+        public string type;   // exp / hp / maxhp / ability / flag / goto
+        public string key;    // ability: 异能 id；flag: 标记名；goto: 事件 id
         public int value;
     }
 }

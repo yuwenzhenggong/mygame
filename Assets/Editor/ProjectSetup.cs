@@ -427,7 +427,8 @@ public static class ProjectSetup
 
         // 9) 像素精灵
         string[] spriteNames = { "city_street", "safehouse", "jungle_arena", "hero_front", "hero_right", "hero_back", "hero_left", "marker",
-                                 "hero_walk_down_0", "hero_walk_down_1", "hero_walk_down_2", "hero_walk_down_3",
+                                 "hero_run_down_0", "hero_run_down_1", "hero_run_down_2", "hero_run_down_3", "hero_run_down_4",
+                                 "hero_run_down_5", "hero_run_down_6", "hero_run_down_7", "hero_run_down_8", "hero_run_down_9",
                                  "enemy_attacker", "enemy_beast", "enemy_elite", "px_white" };
         int spriteOk = 0;
 

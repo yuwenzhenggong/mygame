@@ -128,13 +128,16 @@ namespace XianXia.World
                 LoadSprite("hero_right"),
                 LoadSprite("hero_back"),
                 LoadSprite("hero_left"));
-            walker.SetWalkDown(new[]
+            // 跑步动画帧数不固定：从 0 开始连号加载，遇到缺失就停
+            var runFrames = new List<Sprite>();
+            for (int i = 0; i < 64; i++)
             {
-                LoadSprite("hero_walk_down_0"),
-                LoadSprite("hero_walk_down_1"),
-                LoadSprite("hero_walk_down_2"),
-                LoadSprite("hero_walk_down_3")
-            });
+                var sprite = Resources.Load<Sprite>(PixelArtSettings.ArtResourceRoot + "hero_run_down_" + i);
+                if (sprite == null) break;
+                runFrames.Add(sprite);
+            }
+            walker.SetWalkDown(runFrames.ToArray());
+            if (runFrames.Count == 0) Debug.LogWarning("[World] 没找到跑步帧 hero_run_down_*");
 
             playerGo.AddComponent<PlayerCombat>();
 

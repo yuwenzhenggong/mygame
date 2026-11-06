@@ -21,8 +21,8 @@ namespace XianXia.World
         public float HalfWidth = 0.28f;
         public float HalfHeight = 0.16f;
 
-        // 向下走路的帧时长。0.12s ≈ 8 帧/秒，跑得快时腿也该迈得勤
-        public float WalkFrameDuration = 0.12f;
+        // 向下跑动的帧时长。10 帧循环，0.06s/帧 → 0.6 秒一个循环
+        public float WalkFrameDuration = 0.06f;
 
         SceneData _scene;
         SpriteRenderer _body;
@@ -30,8 +30,8 @@ namespace XianXia.World
         // 按 Facing 枚举下标存：0=正 1=右 2=背 3=左
         readonly Sprite[] _sprites = new Sprite[4];
 
-        // 向下的 4 帧走路动画；没有就退回静态站立图
-        readonly Sprite[] _walkDown = new Sprite[4];
+        // 向下的跑步动画帧（帧数不定，来自序列帧素材）；没有就退回静态站立图
+        Sprite[] _walkDown = new Sprite[0];
 
         Facing _facing = Facing.Front;
         bool _walking;
@@ -56,12 +56,18 @@ namespace XianXia.World
 
         public void SetWalkDown(Sprite[] frames)
         {
-            for (int i = 0; i < _walkDown.Length; i++)
-                _walkDown[i] = (frames != null && i < frames.Length) ? frames[i] : null;
+            var list = new System.Collections.Generic.List<Sprite>();
+            if (frames != null)
+            {
+                foreach (var f in frames)
+                    if (f != null) list.Add(f);
+            }
+            _walkDown = list.ToArray();
+            _walkFrame = 0;
             ApplySprite();
         }
 
-        bool HasWalkDown => _walkDown[0] != null;
+        bool HasWalkDown => _walkDown.Length > 0;
 
         void Start()
         {
@@ -159,7 +165,7 @@ namespace XianXia.World
             Sprite sprite = null;
 
             // 只有「向下走」有动画帧，其它方向还是静态站立图
-            if (_walking && _facing == Facing.Front && _walkDown[_walkFrame] != null)
+            if (_walking && _facing == Facing.Front && _walkFrame >= 0 && _walkFrame < _walkDown.Length)
                 sprite = _walkDown[_walkFrame];
 
             if (sprite == null) sprite = _sprites[(int)_facing];

@@ -38,7 +38,12 @@ namespace XianXia.World
         int _walkFrame;
         float _walkTimer;
 
+        // 角色的"面向"简化成左右两态：只由左右输入决定，上下走时保持上一次的左右。
+        // 约定：朝左 = 用原始序列帧；朝右 = 水平翻转。所以默认朝左。
+        bool _faceLeft = true;
+
         public Facing CurrentFacing => _facing;
+        public bool FaceLeft => _faceLeft;
 
         public void Init(SceneData scene)
         {
@@ -94,6 +99,11 @@ namespace XianXia.World
                 SetIdle();
                 return;
             }
+
+            // 横向输入才改变面向；上下走时沿用上一次的左右
+            bool wasLeft = _faceLeft;
+            if (Mathf.Abs(h) > 0.01f) _faceLeft = h < 0f;
+            if (_faceLeft != wasLeft) ApplySprite();
 
             UpdateFacing(h, v);
             dir.Normalize();
@@ -162,14 +172,23 @@ namespace XianXia.World
             if (_body == null) _body = GetComponentInChildren<SpriteRenderer>();
             if (_body == null) return;
 
-            Sprite sprite = null;
+            // 有序列帧时：所有方向共用同一套跑步帧，左右靠 flipX 表达
+            bool useRun = _walkDown.Length > 0;
 
-            // 只有「向下走」有动画帧，其它方向还是静态站立图
-            if (_walking && _facing == Facing.Front && _walkFrame >= 0 && _walkFrame < _walkDown.Length)
+            Sprite sprite = null;
+            if (useRun && _walking && _walkFrame >= 0 && _walkFrame < _walkDown.Length)
                 sprite = _walkDown[_walkFrame];
 
-            if (sprite == null) sprite = _sprites[(int)_facing];
+            if (sprite == null)
+            {
+                // 静止：有跑步帧就统一用正面站立图（靠翻转表达左右），
+                // 没有序列帧时退回原来的四向站立图
+                sprite = useRun ? _sprites[(int)Facing.Front] : _sprites[(int)_facing];
+            }
+
             if (sprite != null) _body.sprite = sprite;
+            // 朝左用原图，朝右水平翻转
+            _body.flipX = useRun && !_faceLeft;
         }
 
         Vector2 MoveAxis(Vector2 pos, Vector2 delta)

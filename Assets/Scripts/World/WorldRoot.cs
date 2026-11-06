@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using UnityEngine;
+using XianXia.Data;
 
 namespace XianXia.World
 {
@@ -68,6 +69,7 @@ namespace XianXia.World
 
             BuildBackdrop();
             BuildPlayer(worldPos ?? data.Spawn);
+            BuildEnemies();
             BuildInteractables();
             SetupCamera();
 
@@ -134,7 +136,55 @@ namespace XianXia.World
                 LoadSprite("hero_walk_down_3")
             });
 
+            playerGo.AddComponent<PlayerCombat>();
+
             PlayerTransform = playerGo.transform;
+        }
+
+        // 敌人按 enemies.json 的 spawns 摆，只摆当前场景的
+        void BuildEnemies()
+        {
+            var table = DataLoader.Load<EnemyTable>("Data/enemies");
+            if (table == null || table.spawns == null) return;
+
+            var pxWhite = LoadSprite("px_white");
+            int count = 0;
+
+            foreach (var spawn in table.spawns)
+            {
+                if (spawn == null || spawn.scene != Scene.Id) continue;
+
+                EnemyDef def = null;
+                foreach (var d in table.enemies)
+                    if (d != null && d.id == spawn.enemy) { def = d; break; }
+
+                if (def == null)
+                {
+                    Debug.LogError("[World] 敌人配置不存在: " + spawn.enemy + "（刷新点 " + spawn.id + "）");
+                    continue;
+                }
+
+                var sprite = LoadSprite(def.sprite);
+                var world = Scene.ImageToWorld(spawn.imageX, spawn.imageY);
+
+                var go = new GameObject("Enemy_" + spawn.id);
+                go.transform.SetParent(_container.transform, false);
+                go.transform.position = new Vector3(world.x, world.y, 0f);
+
+                var enemy = go.AddComponent<Enemy>();
+                enemy.Init(def, Scene, PlayerTransform, sprite, pxWhite);
+                enemy.OnDeath = OnEnemyDeath;
+                count++;
+            }
+
+            Debug.Log("[World] 本场景敌人 " + count + " 个");
+        }
+
+        void OnEnemyDeath(Enemy e)
+        {
+            // 掉落与结算放 M3，这里先记录
+            if (e != null && e.Def != null)
+                Debug.Log("[World] 敌人死亡: " + e.Def.name);
         }
 
         void BuildInteractables()

@@ -23,6 +23,10 @@ namespace XianXia.UI
         Text _logText;
         Text _promptText;
 
+        RectTransform _hpBar;
+        Image _hpFill;
+        Text _hpText;
+
         RectTransform _hudRoot;
         bool _hudVisible;
 
@@ -145,11 +149,34 @@ namespace XianXia.UI
             AddBarButton(bar, "读档", OnLoad);
             AddBarButton(bar, "重开", OnRestart);
 
+            BuildHpBar(canvasGo.transform);
             BuildEventPanel(canvasGo.transform);
 
-            // 默认收起：一进游戏就是干净的画面，只留互动提示
+            // 默认收起：一进游戏就是干净的画面，只留互动提示和一条血条
             hud.gameObject.SetActive(false);
             _hudVisible = false;
+        }
+
+        // HUD 收起时也常驻的血条——战斗中看不到血量等于没法打
+        void BuildHpBar(Transform parent)
+        {
+            var bg = UIFactory.NewImage("HpBar", parent, new Color(0.05f, 0.05f, 0.07f, 0.82f));
+            bg.raycastTarget = false;
+            UIFactory.Anchor(bg.rectTransform, new Vector2(0f, 1f), new Vector2(0f, 1f),
+                new Vector2(12f, -26f), new Vector2(152f, -12f));
+            _hpBar = bg.rectTransform;
+
+            _hpFill = UIFactory.NewImage("Fill", bg.transform, new Color(0.85f, 0.26f, 0.26f, 1f));
+            _hpFill.raycastTarget = false;
+            var f = _hpFill.rectTransform;
+            f.anchorMin = Vector2.zero;
+            f.anchorMax = Vector2.one;
+            f.offsetMin = Vector2.zero;
+            f.offsetMax = Vector2.zero;
+
+            _hpText = UIFactory.NewText("Text", bg.transform, "", UIFactory.SizeSmall,
+                new Color(1f, 1f, 1f, 0.95f), TextAnchor.MiddleCenter);
+            UIFactory.Stretch(_hpText.rectTransform, 0f, 0f, 0f, 0f);
         }
 
         void Update()
@@ -166,6 +193,14 @@ namespace XianXia.UI
         {
             _hudVisible = !_hudVisible;
             if (_hudRoot != null) _hudRoot.gameObject.SetActive(_hudVisible);
+            // HUD 打开时状态栏里已经有血量数字，常驻血条就先藏起来，免得重叠
+            if (_hpBar != null) _hpBar.gameObject.SetActive(!_hudVisible);
+        }
+
+        // 给战斗脚本调用：数值变了立刻刷新界面
+        public void RefreshHud()
+        {
+            Refresh();
         }
 
         void AddBarButton(RectTransform parent, string label, UnityEngine.Events.UnityAction action)
@@ -415,6 +450,22 @@ namespace XianXia.UI
         {
             if (_statusText != null && Session != null) _statusText.text = Session.StatusText();
             if (_logText != null) _logText.text = string.Join("\n", _log.ToArray());
+
+            // 常驻血条
+            if (_hpFill != null && _hpText != null && Session != null)
+            {
+                int cur = Mathf.Max(0, Session.State.hp);
+                int max = Mathf.Max(1, Session.MaxHp);
+                float ratio = Mathf.Clamp01(cur / (float)max);
+
+                var f = _hpFill.rectTransform;
+                f.anchorMin = new Vector2(0f, 0f);
+                f.anchorMax = new Vector2(ratio, 1f);
+                f.offsetMin = Vector2.zero;
+                f.offsetMax = Vector2.zero;
+
+                _hpText.text = cur + " / " + max;
+            }
 
             // 事件面板开着、或者人已经倒下 → 冻结走动和互动
             bool modalOpen = _eventPanel != null && _eventPanel.gameObject.activeSelf;

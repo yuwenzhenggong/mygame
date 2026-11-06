@@ -383,9 +383,52 @@ public static class ProjectSetup
             }
         }
 
+        // 8.5) 敌人配置：刷怪点要指向存在的敌人，且不能刷在实心格里
+        var enemyTable = XianXia.Data.DataLoader.Load<XianXia.Data.EnemyTable>("Data/enemies");
+        if (enemyTable == null)
+        {
+            Debug.LogError("[SelfCheck] enemies.json 读取失败");
+            failures++;
+        }
+        else
+        {
+            Debug.Log("[SelfCheck] 敌人种类 " + enemyTable.enemies.Count + "，刷新点 " + enemyTable.spawns.Count);
+
+            foreach (var spawn in enemyTable.spawns)
+            {
+                if (spawn == null) continue;
+
+                bool defOk = false;
+                foreach (var d in enemyTable.enemies)
+                    if (d != null && d.id == spawn.enemy) { defOk = true; break; }
+
+                if (!defOk)
+                {
+                    Debug.LogError("[SelfCheck] 刷怪点 " + spawn.id + " 引用了不存在的敌人: " + spawn.enemy);
+                    failures++;
+                }
+
+                var sc = XianXia.World.SceneData.Load(spawn.scene);
+                if (sc == null)
+                {
+                    Debug.LogError("[SelfCheck] 刷怪点 " + spawn.id + " 的场景不存在: " + spawn.scene);
+                    failures++;
+                    continue;
+                }
+
+                var scCell = sc.WorldToCell(sc.ImageToWorld(spawn.imageX, spawn.imageY));
+                if (sc.IsSolidCell(scCell.x, scCell.y))
+                {
+                    Debug.LogError("[SelfCheck] 刷怪点 " + spawn.id + " 落在实心格上: " + scCell);
+                    failures++;
+                }
+            }
+        }
+
         // 9) 像素精灵
         string[] spriteNames = { "city_street", "safehouse", "jungle_arena", "hero_front", "hero_right", "hero_back", "hero_left", "marker",
-                                 "hero_walk_down_0", "hero_walk_down_1", "hero_walk_down_2", "hero_walk_down_3" };
+                                 "hero_walk_down_0", "hero_walk_down_1", "hero_walk_down_2", "hero_walk_down_3",
+                                 "enemy_attacker", "enemy_beast", "enemy_elite", "px_white" };
         int spriteOk = 0;
 
         foreach (var spriteName in spriteNames)

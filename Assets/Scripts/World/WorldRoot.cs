@@ -110,7 +110,9 @@ namespace XianXia.World
 
                 var sr = go.AddComponent<SpriteRenderer>();
                 sr.sprite = markerSprite;
-                sr.sortingOrder = 5;
+                // 必须画在角色之上（角色是 10）：标记坐标常常正好落在角色身后，
+                // 排在下面会被整个挡住，玩家看不到可互动点。
+                sr.sortingOrder = 20;
 
                 entries.Add(new Interactor.Entry
                 {

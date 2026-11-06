@@ -12,6 +12,16 @@
       "spawnImageY": 296
     },
     {
+      "id": "jungle",
+      "image": "Art/jungle_arena",
+      "mask": "Data/jungle_mask",
+      "imageWidth": 640,
+      "imageHeight": 360,
+      "cellSize": 16,
+      "spawnImageX": 328,
+      "spawnImageY": 184
+    },
+    {
       "id": "safehouse",
       "image": "Art/safehouse",
       "mask": "Data/safehouse_mask",

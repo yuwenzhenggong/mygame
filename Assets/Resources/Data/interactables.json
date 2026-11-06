@@ -134,6 +134,30 @@
       "targetScene": "safehouse",
       "targetImageX": 320,
       "targetImageY": 300
+    },
+    {
+      "id": "i_to_jungle",
+      "scene": "overworld",
+      "name": "通往城外的路",
+      "action": "travel",
+      "imageX": 104,
+      "imageY": 312,
+      "radius": 90,
+      "targetScene": "jungle",
+      "targetImageX": 328,
+      "targetImageY": 232
+    },
+    {
+      "id": "i_jungle_exit",
+      "scene": "jungle",
+      "name": "离开林子",
+      "action": "travel",
+      "imageX": 328,
+      "imageY": 280,
+      "radius": 80,
+      "targetScene": "overworld",
+      "targetImageX": 104,
+      "targetImageY": 330
     }
   ]
 }

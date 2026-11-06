@@ -384,7 +384,7 @@ public static class ProjectSetup
         }
 
         // 9) 像素精灵
-        string[] spriteNames = { "city_street", "safehouse", "hero_front", "hero_right", "hero_back", "hero_left", "marker",
+        string[] spriteNames = { "city_street", "safehouse", "jungle_arena", "hero_front", "hero_right", "hero_back", "hero_left", "marker",
                                  "hero_walk_down_0", "hero_walk_down_1", "hero_walk_down_2", "hero_walk_down_3" };
         int spriteOk = 0;
 
@@ -439,6 +439,11 @@ public static class ProjectSetup
     public static void CaptureOverworldPreview()
     {
         CaptureScene("overworld", "preview_overworld.png");
+    }
+
+    public static void CaptureJunglePreview()
+    {
+        CaptureScene("jungle", "preview_jungle.png");
     }
 
     static void CaptureScene(string sceneId, string fileName)

@@ -144,16 +144,16 @@
       "imageY": 312,
       "radius": 90,
       "targetScene": "jungle",
-      "targetImageX": 328,
-      "targetImageY": 232
+      "targetImageX": 488,
+      "targetImageY": 360
     },
     {
       "id": "i_jungle_exit",
       "scene": "jungle",
       "name": "离开林子",
       "action": "travel",
-      "imageX": 328,
-      "imageY": 280,
+      "imageX": 488,
+      "imageY": 408,
       "radius": 80,
       "targetScene": "overworld",
       "targetImageX": 104,

@@ -15,11 +15,11 @@
       "id": "jungle",
       "image": "Art/jungle_arena",
       "mask": "Data/jungle_mask",
-      "imageWidth": 640,
-      "imageHeight": 360,
+      "imageWidth": 960,
+      "imageHeight": 540,
       "cellSize": 16,
-      "spawnImageX": 328,
-      "spawnImageY": 184
+      "spawnImageX": 488,
+      "spawnImageY": 280
     },
     {
       "id": "safehouse",

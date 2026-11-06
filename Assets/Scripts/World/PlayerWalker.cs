@@ -14,15 +14,15 @@ namespace XianXia.World
     // 自己算 AABB 碰撞反而更稳、更好调。
     public class PlayerWalker : MonoBehaviour
     {
-        public float Speed = 3.5f;
+        public float Speed = 5.5f;
 
         // 脚底碰撞盒的半宽/半高（世界单位）。只测脚下，不测全身，
         // 这样上半身可以「探进」墙里一点，走位手感更好。
         public float HalfWidth = 0.28f;
         public float HalfHeight = 0.16f;
 
-        // 向下走路的帧时长。0.14s ≈ 7 帧/秒，是这类像素走路循环的常见速度
-        public float WalkFrameDuration = 0.14f;
+        // 向下走路的帧时长。0.12s ≈ 8 帧/秒，跑得快时腿也该迈得勤
+        public float WalkFrameDuration = 0.12f;
 
         SceneData _scene;
         SpriteRenderer _body;

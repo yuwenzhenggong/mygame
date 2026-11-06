@@ -33,13 +33,20 @@ namespace XianXia.Data
     public class InteractionDef
     {
         public string id;
+        public string scene = "overworld";   // 属于哪个场景
         public string name;
+        public string action = "event";       // event / travel（M4 再加 refine/rest/storage/quest/breakthrough）
         public int imageX;             // 场景图上的像素坐标
         public int imageY;
         public int radius = 72;        // 触发半径（像素）
-        public string eventId;         // 互动时播的事件
+        public string eventId;         // action=event 时播的事件
         public bool onceOnly;          // 只能互动一次
         public string requireAbility;  // 需要某个异能才能互动，留空表示无条件
+
+        // action=travel 专用
+        public string targetScene;
+        public int targetImageX;
+        public int targetImageY;
     }
 
     // 事件

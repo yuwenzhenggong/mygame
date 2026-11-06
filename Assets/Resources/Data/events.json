@@ -105,6 +105,46 @@
           "effects": [{ "type": "exp", "value": 20 }]
         }
       ]
+    },
+    {
+      "id": "e_safe_board",
+      "title": "情报板",
+      "text": "钉满照片和图钉的软木板。最近的一张贴着旧街区的地图，边角画了个圈。",
+      "options": [
+        { "text": "看完", "resultText": "（任务系统还没接，M4 再接）", "effects": [] }
+      ]
+    },
+    {
+      "id": "e_safe_refine",
+      "title": "炼化台",
+      "text": "台面上摆着一只坩埚，锅底烧着不会熄灭的青火。把残响丢进去，能烧出点东西。",
+      "options": [
+        { "text": "看一眼", "resultText": "（炼化功能还没接，M4 再接）", "effects": [] }
+      ]
+    },
+    {
+      "id": "e_safe_rest",
+      "title": "休整床",
+      "text": "床板很硬，被子有股晒过的味道。躺下去就能睡着。",
+      "options": [
+        { "text": "看一眼", "resultText": "（回血功能还没接，M4 再接）", "effects": [] }
+      ]
+    },
+    {
+      "id": "e_safe_storage",
+      "title": "物资箱",
+      "text": "一只旧木箱，锁扣早就锈死了，里面塞着些不知什么时候攒下的东西。",
+      "options": [
+        { "text": "看一眼", "resultText": "（物资面板还没接，M4 再接）", "effects": [] }
+      ]
+    },
+    {
+      "id": "e_safe_break",
+      "title": "突破点",
+      "text": "地上刻着一圈法阵，光已经很淡了。站上去能感觉到脚下在发烫。",
+      "options": [
+        { "text": "看一眼", "resultText": "（突破系统还没接，M5 再接）", "effects": [] }
+      ]
     }
   ]
 }

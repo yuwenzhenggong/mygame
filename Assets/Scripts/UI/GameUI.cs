@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 using XianXia.Data;
+using XianXia.World;
 
 namespace XianXia.UI
 {
@@ -220,15 +221,39 @@ namespace XianXia.UI
         void NewGame()
         {
             _log.Clear();
-            Session = new GameSession(Content, new GameState());
-            AppendLog("你在街上醒来，不记得自己是怎么到的这里。");
-            AppendLog("走近发光的东西，按 E 互动。");
+
+            // 有存档就接着玩（"启动能读档"）
+            var saved = SaveSystem.Load();
+            if (saved != null)
+            {
+                Session = new GameSession(Content, saved);
+                AppendLog("<color=#6ec1ff>已读取存档。</color>");
+            }
+            else
+            {
+                Session = new GameSession(Content, new GameState());
+                AppendLog("你在一间安全的屋子里醒来，不记得自己是怎么到的这里。");
+                AppendLog("走近发光的东西，按 E 互动；走到门口能出去。");
+            }
             Refresh();
+        }
+
+        // 把玩家当前所在场景和坐标写回存档数据
+        void CapturePosition()
+        {
+            var world = WorldRoot.Instance;
+            if (world == null || world.Scene == null || world.PlayerTransform == null) return;
+            if (Session == null) return;
+
+            Session.State.sceneId = world.Scene.Id;
+            Session.State.playerX = world.PlayerTransform.position.x;
+            Session.State.playerY = world.PlayerTransform.position.y;
         }
 
         void OnSave()
         {
             if (Session == null) return;
+            CapturePosition();
             AppendLog(SaveSystem.Save(Session.State) ? "<color=#6ec1ff>已存档。</color>" : "<color=#ff6b6b>存档失败，看 Console。</color>");
             Refresh();
         }
@@ -247,13 +272,30 @@ namespace XianXia.UI
 
             Session = new GameSession(Content, state);
             AppendLog("<color=#6ec1ff>已读档。</color>");
+
+            // 读档要先把场景切回去，再放玩家
+            var world = WorldRoot.Instance;
+            if (world != null)
+            {
+                var pos = new Vector2(state.playerX, state.playerY);
+                world.LoadScene(string.IsNullOrEmpty(state.sceneId) ? SceneData.DefaultSceneId() : state.sceneId,
+                                pos.sqrMagnitude < 0.0001f ? (Vector2?)null : pos);
+            }
+
             Refresh();
         }
 
         void OnRestart()
         {
             if (Content == null) return;
+            SaveSystem.Delete();
             NewGame();
+
+            var world = WorldRoot.Instance;
+            if (world != null) world.LoadScene(SceneData.DefaultSceneId(), null);
+
+            AppendLog("<color=#ffa657>已重开。</color>");
+            Refresh();
         }
 
         // ---------------- 事件面板 ----------------

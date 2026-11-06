@@ -1,41 +1,86 @@
+using System.Collections.Generic;
 using UnityEngine;
 
 namespace XianXia.World
 {
     // 世界根节点：铺背景图、放玩家、摆互动标记、挂相机跟随。
-    // 全部运行时用代码搭，不依赖场景里的 prefab。
+    // 支持换场景：LoadScene 会销毁旧世界再重建。
     public class WorldRoot : MonoBehaviour
     {
+        public static WorldRoot Instance { get; private set; }
+
         public SceneData Scene { get; private set; }
         public Transform PlayerTransform { get; private set; }
 
-        bool _built;
+        ContentLibrary _content;
+        GameObject _container;
+        bool _started;
+
+        void Awake()
+        {
+            Instance = this;
+        }
+
+        void OnDestroy()
+        {
+            if (Instance == this) Instance = null;
+        }
 
         void Start()
         {
-            Build();
+            if (_started) return;
+            _started = true;
+
+            _content = ContentLibrary.Load();
+
+            // 有存档就从存档的场景/位置起步，否则进默认场景
+            var state = SaveSystem.Load();
+            if (state != null && !string.IsNullOrEmpty(state.sceneId))
+            {
+                var saved = new Vector2(state.playerX, state.playerY);
+                // 存档位置如果是 (0,0) 说明是旧档，退回场景默认出生点
+                if (saved.sqrMagnitude < 0.0001f) saved = new Vector2(-1f, -1f);
+                LoadScene(state.sceneId, saved.x < 0f ? (Vector2?)null : saved);
+            }
+            else
+            {
+                LoadScene(SceneData.DefaultSceneId(), null);
+            }
         }
 
-        public void Build()
+        // worldPos 为 null 时用场景自带出生点
+        public void LoadScene(string sceneId, Vector2? worldPos)
         {
-            if (_built) return;
-            _built = true;
-
-            Scene = SceneData.Load();
-            if (Scene == null)
+            var data = SceneData.Load(sceneId);
+            if (data == null)
             {
-                Debug.LogError("[World] 场景加载失败，世界不会出现");
+                Debug.LogError("[World] 场景加载失败: " + sceneId);
                 return;
             }
 
+            Scene = data;
+
+            if (_content == null) _content = ContentLibrary.Load();
+
+            if (_container != null) Destroy(_container);
+            _container = new GameObject("Scene_" + data.Id);
+            _container.transform.SetParent(transform, false);
+
             BuildBackdrop();
-            BuildPlayer();
+            BuildPlayer(worldPos ?? data.Spawn);
             BuildInteractables();
             SetupCamera();
 
-            Debug.Log("[World] 场景 " + Scene.ImageWidth + "x" + Scene.ImageHeight
-                      + "，世界 " + Scene.WorldWidth.ToString("0.##") + " x " + Scene.WorldHeight.ToString("0.##")
-                      + " 单位，遮罩 " + Scene.Cols + "x" + Scene.Rows + " 格");
+            Debug.Log("[World] 进入场景 " + data.Id + "（" + data.ImageWidth + "x" + data.ImageHeight
+                      + "，遮罩 " + data.Cols + "x" + data.Rows + "）");
+        }
+
+        // 按目标场景的图片像素坐标传送
+        public void TravelTo(string sceneId, int imageX, int imageY)
+        {
+            var target = SceneData.Load(sceneId);
+            if (target == null) return;
+            LoadScene(sceneId, target.ImageToWorld(imageX, imageY));
         }
 
         void BuildBackdrop()
@@ -48,22 +93,22 @@ namespace XianXia.World
             }
 
             var go = new GameObject("Backdrop");
-            go.transform.SetParent(transform, false);
+            go.transform.SetParent(_container.transform, false);
 
             var sr = go.AddComponent<SpriteRenderer>();
             sr.sprite = sprite;
-            sr.sortingOrder = -10;   // 永远在所有角色后面
+            sr.sortingOrder = -10;
 
-            // 精灵 pivot 在中心，放到 (宽/2, 高/2) 让图片左下角正好落在世界原点
+            // 精灵 pivot 在中心，放到 (宽/2, 高/2) 让图片左下角落在世界原点
             var size = sprite.bounds.size;
             go.transform.position = new Vector3(size.x * 0.5f, size.y * 0.5f, 0f);
         }
 
-        void BuildPlayer()
+        void BuildPlayer(Vector2 spawn)
         {
             var playerGo = new GameObject("Player");
-            playerGo.transform.SetParent(transform, false);
-            playerGo.transform.position = new Vector3(Scene.Spawn.x, Scene.Spawn.y, 0f);
+            playerGo.transform.SetParent(_container.transform, false);
+            playerGo.transform.position = new Vector3(spawn.x, spawn.y, 0f);
 
             // 精灵 48x64（PPU 32）→ 世界 1.5 x 2；pivot 在中心，所以身体抬 1.0 让脚底落在玩家坐标上
             var bodyGo = new GameObject("Body");
@@ -94,18 +139,19 @@ namespace XianXia.World
 
         void BuildInteractables()
         {
-            var content = ContentLibrary.Load();
             var markerSprite = LoadSprite("marker");
-            var entries = new System.Collections.Generic.List<Interactor.Entry>();
+            var entries = new List<Interactor.Entry>();
 
-            foreach (var def in content.Interactions)
+            foreach (var def in _content.Interactions)
             {
                 if (def == null || string.IsNullOrEmpty(def.id)) continue;
+                // 只摆当前场景的互动点
+                if (def.scene != Scene.Id) continue;
 
-                var world = ImageToWorld(def.imageX, def.imageY);
+                var world = Scene.ImageToWorld(def.imageX, def.imageY);
 
                 var go = new GameObject("Marker_" + def.id);
-                go.transform.SetParent(transform, false);
+                go.transform.SetParent(_container.transform, false);
                 go.transform.position = new Vector3(world.x, world.y, 0f);
 
                 var sr = go.AddComponent<SpriteRenderer>();
@@ -125,15 +171,7 @@ namespace XianXia.World
             var interactor = PlayerTransform.gameObject.AddComponent<Interactor>();
             interactor.SetEntries(entries);
 
-            Debug.Log("[World] 可互动对象 " + entries.Count + " 个");
-        }
-
-        // 场景图像素坐标 → 世界坐标（y 轴要翻转）
-        Vector2 ImageToWorld(int px, int py)
-        {
-            return new Vector2(
-                px / (float)PixelArtSettings.PixelsPerUnit,
-                (Scene.ImageHeight - py) / (float)PixelArtSettings.PixelsPerUnit);
+            Debug.Log("[World] 本场景互动点 " + entries.Count + " 个");
         }
 
         Sprite LoadSprite(string name)

@@ -1,17 +1,26 @@
 using System;
+using System.Collections.Generic;
 
 namespace XianXia.Data
 {
-    // 场景配置：一张整幅背景图 + 一张碰撞遮罩
+    // 场景注册表：所有场景的配置都在 scenes.json 里
     [Serializable]
-    public class SceneConfig
+    public class SceneRegistry
     {
-        public string image = "Art/city_street";   // Resources 下的精灵名
-        public string mask = "Data/scene_mask";    // Resources 下的遮罩文本
+        public string defaultScene = "safehouse";
+        public List<SceneEntry> scenes = new List<SceneEntry>();
+    }
+
+    [Serializable]
+    public class SceneEntry
+    {
+        public string id;
+        public string image;        // Resources 下的精灵名
+        public string mask;         // Resources 下的遮罩文本
         public int imageWidth;
         public int imageHeight;
         public int cellSize = 16;
-        public int spawnImageX;
+        public int spawnImageX;     // 默认出生点（场景图像素坐标）
         public int spawnImageY;
     }
 }

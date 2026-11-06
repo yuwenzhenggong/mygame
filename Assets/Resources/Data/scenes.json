@@ -1,0 +1,25 @@
+{
+  "defaultScene": "safehouse",
+  "scenes": [
+    {
+      "id": "overworld",
+      "image": "Art/city_street",
+      "mask": "Data/scene_mask",
+      "imageWidth": 1672,
+      "imageHeight": 941,
+      "cellSize": 16,
+      "spawnImageX": 840,
+      "spawnImageY": 296
+    },
+    {
+      "id": "safehouse",
+      "image": "Art/safehouse",
+      "mask": "Data/safehouse_mask",
+      "imageWidth": 640,
+      "imageHeight": 360,
+      "cellSize": 16,
+      "spawnImageX": 320,
+      "spawnImageY": 250
+    }
+  ]
+}

@@ -1,9 +1,0 @@
-﻿{
-  "image": "Art/city_street",
-  "mask": "Data/scene_mask",
-  "imageWidth": 1672,
-  "imageHeight": 941,
-  "cellSize": 16,
-  "spawnImageX": 920,
-  "spawnImageY": 296
-}

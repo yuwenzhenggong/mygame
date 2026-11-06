@@ -50,3 +50,5 @@ preview_world.png
 # 扫描/排查工具留下的临时产物（不属于本项目，磁盘上保留但不进仓库）
 _scan_files.*
 E盘*
+preview_overworld.png
+preview*.log

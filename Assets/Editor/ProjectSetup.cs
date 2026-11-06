@@ -159,11 +159,31 @@ public static class ProjectSetup
         if (content.Interactions.Count == 0) { Debug.LogError("[SelfCheck] 互动点为空"); failures++; }
 
         // 1) 互动点引用的东西必须存在
+        var sceneIds = new System.Collections.Generic.List<string>();
+        var reg0 = XianXia.World.SceneData.LoadRegistry();
+        if (reg0 != null)
+            foreach (var e in reg0.scenes)
+                if (e != null && !string.IsNullOrEmpty(e.id)) sceneIds.Add(e.id);
+
         foreach (var def in content.Interactions)
         {
             if (def == null) continue;
 
-            if (content.GetEvent(def.eventId) == null)
+            if (!string.IsNullOrEmpty(def.scene) && !sceneIds.Contains(def.scene))
+            {
+                Debug.LogError("[SelfCheck] 互动点 " + def.id + " 属于不存在的场景: " + def.scene);
+                failures++;
+            }
+
+            if (def.action == "travel")
+            {
+                if (string.IsNullOrEmpty(def.targetScene) || !sceneIds.Contains(def.targetScene))
+                {
+                    Debug.LogError("[SelfCheck] 互动点 " + def.id + " 传送目标不存在: " + def.targetScene);
+                    failures++;
+                }
+            }
+            else if (content.GetEvent(def.eventId) == null)
             {
                 Debug.LogError("[SelfCheck] 互动点 " + def.id + " 引用了不存在的事件: " + def.eventId);
                 failures++;
@@ -305,43 +325,66 @@ public static class ProjectSetup
             }
         }
 
-        // 8) 场景
-        var scene = XianXia.World.SceneData.Load();
-        if (scene == null)
+        // 8) 场景（多场景：注册表里每个场景都要能加载，出生点要可走）
+        var registry = XianXia.World.SceneData.LoadRegistry();
+        if (registry == null)
         {
-            Debug.LogError("[SelfCheck] 场景加载失败");
+            Debug.LogError("[SelfCheck] 场景注册表读取失败");
             failures++;
         }
         else
         {
-            Debug.Log("[SelfCheck] 场景 " + scene.ImageWidth + "x" + scene.ImageHeight
-                      + "，遮罩 " + scene.Cols + "x" + scene.Rows + " 格（每格 " + scene.CellSize + "px）"
-                      + "，世界 " + scene.WorldWidth.ToString("0.##") + " x " + scene.WorldHeight.ToString("0.##"));
+            bool defaultOk = false;
+            foreach (var e in registry.scenes)
+                if (e != null && e.id == registry.defaultScene) defaultOk = true;
 
-            if (Resources.Load<Sprite>(scene.ImageName) == null)
+            if (!defaultOk)
             {
-                Debug.LogError("[SelfCheck] 找不到场景背景图: " + scene.ImageName);
+                Debug.LogError("[SelfCheck] defaultScene 不在场景列表里: " + registry.defaultScene);
                 failures++;
             }
 
-            var cell = scene.WorldToCell(scene.Spawn);
-            if (scene.IsSolidCell(cell.x, cell.y))
+            foreach (var entry in registry.scenes)
             {
-                Debug.LogError("[SelfCheck] 出生点落在实心格上: " + cell);
-                failures++;
-            }
+                if (entry == null || string.IsNullOrEmpty(entry.id)) continue;
 
-            bool hasExit = !scene.IsSolidCell(cell.x + 1, cell.y) || !scene.IsSolidCell(cell.x - 1, cell.y) ||
-                           !scene.IsSolidCell(cell.x, cell.y + 1) || !scene.IsSolidCell(cell.x, cell.y - 1);
-            if (!hasExit)
-            {
-                Debug.LogError("[SelfCheck] 出生点四周全是墙");
-                failures++;
+                var scene = XianXia.World.SceneData.Load(entry.id);
+                if (scene == null)
+                {
+                    Debug.LogError("[SelfCheck] 场景加载失败: " + entry.id);
+                    failures++;
+                    continue;
+                }
+
+                Debug.Log("[SelfCheck] 场景 " + scene.Id + " " + scene.ImageWidth + "x" + scene.ImageHeight
+                          + "，遮罩 " + scene.Cols + "x" + scene.Rows
+                          + "，世界 " + scene.WorldWidth.ToString("0.##") + " x " + scene.WorldHeight.ToString("0.##"));
+
+                if (Resources.Load<Sprite>(scene.ImageName) == null)
+                {
+                    Debug.LogError("[SelfCheck] " + scene.Id + " 找不到背景图: " + scene.ImageName);
+                    failures++;
+                }
+
+                var cell = scene.WorldToCell(scene.Spawn);
+                if (scene.IsSolidCell(cell.x, cell.y))
+                {
+                    Debug.LogError("[SelfCheck] " + scene.Id + " 的出生点落在实心格上: " + cell);
+                    failures++;
+                }
+
+                bool hasExit = !scene.IsSolidCell(cell.x + 1, cell.y) || !scene.IsSolidCell(cell.x - 1, cell.y) ||
+                               !scene.IsSolidCell(cell.x, cell.y + 1) || !scene.IsSolidCell(cell.x, cell.y - 1);
+                if (!hasExit)
+                {
+                    Debug.LogError("[SelfCheck] " + scene.Id + " 的出生点四周全是墙");
+                    failures++;
+                }
             }
         }
 
         // 9) 像素精灵
-        string[] spriteNames = { "city_street", "hero_front", "hero_right", "hero_back", "hero_left", "marker",
+        string[] spriteNames = { "city_street", "safehouse", "hero_front", "hero_right", "hero_back", "hero_left", "marker",
                                  "hero_walk_down_0", "hero_walk_down_1", "hero_walk_down_2", "hero_walk_down_3" };
         int spriteOk = 0;
 
@@ -385,9 +428,20 @@ public static class ProjectSetup
     }
 
     // 把世界渲染成一张 640x360 的 PNG，用来检查像素比例、精灵排序、背景图是否画得出来。
-    // 命令行：-executeMethod ProjectSetup.CaptureWorldPreview
-    [MenuItem("都市异能 Demo/渲染世界预览图")]
+    // 命令行：-executeMethod ProjectSetup.CaptureWorldPreview   （默认场景）
+    //         -executeMethod ProjectSetup.CaptureOverworldPreview（街道）
+    [MenuItem("都市异能 Demo/渲染预览图（默认场景）")]
     public static void CaptureWorldPreview()
+    {
+        CaptureScene(XianXia.World.SceneData.DefaultSceneId(), "preview_world.png");
+    }
+
+    public static void CaptureOverworldPreview()
+    {
+        CaptureScene("overworld", "preview_overworld.png");
+    }
+
+    static void CaptureScene(string sceneId, string fileName)
     {
         EditorSceneManager.OpenScene(ScenePath, OpenSceneMode.Single);
 
@@ -406,7 +460,7 @@ public static class ProjectSetup
 
         var rootGo = new GameObject("__PreviewWorld");
         var world = rootGo.AddComponent<XianXia.World.WorldRoot>();
-        world.Build();
+        world.LoadScene(sceneId, null);
 
         if (world.Scene == null)
         {
@@ -453,7 +507,7 @@ public static class ProjectSetup
         RenderTexture.active = null;
         cam.targetTexture = null;
 
-        var outPath = Path.Combine(Path.GetDirectoryName(Application.dataPath), "preview_world.png");
+        var outPath = Path.Combine(Path.GetDirectoryName(Application.dataPath), fileName);
         File.WriteAllBytes(outPath, tex.EncodeToPNG());
 
         UnityEngine.Object.DestroyImmediate(tex);

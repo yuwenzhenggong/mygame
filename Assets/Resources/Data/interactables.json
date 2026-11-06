@@ -1,8 +1,77 @@
 {
   "interactables": [
     {
+      "id": "i_safe_quest",
+      "scene": "safehouse",
+      "name": "情报板",
+      "action": "event",
+      "imageX": 240,
+      "imageY": 105,
+      "radius": 90,
+      "eventId": "e_safe_board",
+      "onceOnly": false
+    },
+    {
+      "id": "i_safe_refine",
+      "scene": "safehouse",
+      "name": "炼化台",
+      "action": "event",
+      "imageX": 130,
+      "imageY": 230,
+      "radius": 85,
+      "eventId": "e_safe_refine",
+      "onceOnly": false
+    },
+    {
+      "id": "i_safe_rest",
+      "scene": "safehouse",
+      "name": "休整床",
+      "action": "event",
+      "imageX": 465,
+      "imageY": 235,
+      "radius": 85,
+      "eventId": "e_safe_rest",
+      "onceOnly": false
+    },
+    {
+      "id": "i_safe_storage",
+      "scene": "safehouse",
+      "name": "物资箱",
+      "action": "event",
+      "imageX": 102,
+      "imageY": 322,
+      "radius": 80,
+      "eventId": "e_safe_storage",
+      "onceOnly": false
+    },
+    {
+      "id": "i_safe_breakthrough",
+      "scene": "safehouse",
+      "name": "突破点",
+      "action": "event",
+      "imageX": 500,
+      "imageY": 275,
+      "radius": 80,
+      "eventId": "e_safe_break",
+      "onceOnly": false
+    },
+    {
+      "id": "i_safe_door",
+      "scene": "safehouse",
+      "name": "出口",
+      "action": "travel",
+      "imageX": 320,
+      "imageY": 330,
+      "radius": 80,
+      "targetScene": "overworld",
+      "targetImageX": 620,
+      "targetImageY": 300
+    },
+    {
       "id": "i_lamp",
+      "scene": "overworld",
       "name": "路灯",
+      "action": "event",
       "imageX": 920,
       "imageY": 265,
       "radius": 70,
@@ -11,7 +80,9 @@
     },
     {
       "id": "i_vending",
+      "scene": "overworld",
       "name": "自动售货机",
+      "action": "event",
       "imageX": 715,
       "imageY": 250,
       "radius": 80,
@@ -20,7 +91,9 @@
     },
     {
       "id": "i_sign",
+      "scene": "overworld",
       "name": "电子标牌",
+      "action": "event",
       "imageX": 1132,
       "imageY": 300,
       "radius": 80,
@@ -29,7 +102,9 @@
     },
     {
       "id": "i_bench",
+      "scene": "overworld",
       "name": "长椅",
+      "action": "event",
       "imageX": 1245,
       "imageY": 305,
       "radius": 80,
@@ -38,13 +113,27 @@
     },
     {
       "id": "i_subway",
+      "scene": "overworld",
       "name": "地铁口",
+      "action": "event",
       "imageX": 752,
       "imageY": 755,
       "radius": 80,
       "eventId": "e_subway",
       "onceOnly": true,
       "requireAbility": "a_sight"
+    },
+    {
+      "id": "i_door_home",
+      "scene": "overworld",
+      "name": "安全屋门",
+      "action": "travel",
+      "imageX": 620,
+      "imageY": 262,
+      "radius": 90,
+      "targetScene": "safehouse",
+      "targetImageX": 320,
+      "targetImageY": 300
     }
   ]
 }

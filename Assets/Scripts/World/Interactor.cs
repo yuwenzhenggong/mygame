@@ -67,6 +67,21 @@ namespace XianXia.World
 
             if (Input.GetKeyDown(KeyCode.E))
             {
+                // 传送类互动：不开事件面板，直接换场景
+                if (best.Def.action == "travel")
+                {
+                    if (string.IsNullOrEmpty(best.Def.targetScene))
+                    {
+                        ui.AppendLog("<color=#ff6b6b>传送点没配 targetScene: " + best.Def.id + "</color>");
+                        return;
+                    }
+
+                    ui.Session.MarkInteractionUsed(best.Def);
+                    ui.SetPrompt(null);
+                    WorldRoot.Instance.TravelTo(best.Def.targetScene, best.Def.targetImageX, best.Def.targetImageY);
+                    return;
+                }
+
                 var ev = ui.Content.GetEvent(best.Def.eventId);
                 if (ev == null)
                 {

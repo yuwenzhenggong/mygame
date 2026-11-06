@@ -25,6 +25,11 @@ namespace XianXia
         public List<string> abilities = new List<string>();          // 已获得的异能 id
         public List<string> usedInteractions = new List<string>();   // 已用过的一次性互动
 
+        // 位置与场景（跨场景后要能回到原地）
+        public string sceneId = "safehouse";
+        public float playerX;
+        public float playerY;
+
         public int GetFlag(string key)
         {
             if (flags == null) return 0;

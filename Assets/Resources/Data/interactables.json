@@ -1,13 +1,13 @@
-﻿{
+{
   "interactables": [
     {
       "id": "i_safe_quest",
       "scene": "safehouse",
       "name": "情报板",
       "action": "quest",
-      "imageX": 240,
-      "imageY": 105,
-      "radius": 90,
+      "imageX": 398,
+      "imageY": 210,
+      "radius": 50,
       "onceOnly": false
     },
     {
@@ -15,9 +15,9 @@
       "scene": "safehouse",
       "name": "炼化台",
       "action": "refine",
-      "imageX": 130,
-      "imageY": 230,
-      "radius": 85,
+      "imageX": 215,
+      "imageY": 235,
+      "radius": 48,
       "onceOnly": false
     },
     {
@@ -25,9 +25,9 @@
       "scene": "safehouse",
       "name": "休整床",
       "action": "rest",
-      "imageX": 465,
-      "imageY": 235,
-      "radius": 85,
+      "imageX": 200,
+      "imageY": 315,
+      "radius": 48,
       "onceOnly": false
     },
     {
@@ -35,9 +35,9 @@
       "scene": "safehouse",
       "name": "物资箱",
       "action": "storage",
-      "imageX": 102,
-      "imageY": 322,
-      "radius": 80,
+      "imageX": 540,
+      "imageY": 228,
+      "radius": 48,
       "onceOnly": false
     },
     {
@@ -45,9 +45,9 @@
       "scene": "safehouse",
       "name": "突破点",
       "action": "breakthrough",
-      "imageX": 500,
-      "imageY": 275,
-      "radius": 80,
+      "imageX": 400,
+      "imageY": 285,
+      "radius": 50,
       "onceOnly": false
     },
     {
@@ -55,9 +55,9 @@
       "scene": "safehouse",
       "name": "出口",
       "action": "travel",
-      "imageX": 320,
-      "imageY": 330,
-      "radius": 80,
+      "imageX": 468,
+      "imageY": 178,
+      "radius": 52,
       "targetScene": "overworld",
       "targetImageX": 620,
       "targetImageY": 300
@@ -127,7 +127,7 @@
       "imageY": 262,
       "radius": 90,
       "targetScene": "safehouse",
-      "targetImageX": 320,
+      "targetImageX": 400,
       "targetImageY": 300
     },
     {

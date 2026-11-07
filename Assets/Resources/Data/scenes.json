@@ -28,8 +28,8 @@
       "imageWidth": 640,
       "imageHeight": 360,
       "cellSize": 16,
-      "spawnImageX": 320,
-      "spawnImageY": 250
+      "spawnImageX": 400,
+      "spawnImageY": 300
     }
   ]
 }

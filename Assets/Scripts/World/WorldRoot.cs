@@ -268,6 +268,8 @@ namespace XianXia.World
             {
                 var go = new GameObject(material ? "Drop_Material" : "Drop_Resonance");
                 go.transform.SetParent(_container.transform, false);
+                // 跟着角色一起放大，否则 1.5 倍的主角会把掉落物衬得像芝麻
+                go.transform.localScale = Vector3.one * PixelArtSettings.CharacterScale;
 
                 float ox = Random.Range(-0.4f, 0.4f);
                 float oy = Random.Range(-0.3f, 0.3f);
@@ -299,6 +301,7 @@ namespace XianXia.World
                 var go = new GameObject("Marker_" + def.id);
                 go.transform.SetParent(_container.transform, false);
                 go.transform.position = new Vector3(world.x, world.y, 0f);
+                go.transform.localScale = Vector3.one * PixelArtSettings.CharacterScale;
 
                 var sr = go.AddComponent<SpriteRenderer>();
                 sr.sprite = markerSprite;

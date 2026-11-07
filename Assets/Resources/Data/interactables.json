@@ -1,4 +1,4 @@
-{
+﻿{
   "interactables": [
     {
       "id": "i_safe_quest",
@@ -7,7 +7,7 @@
       "action": "quest",
       "imageX": 398,
       "imageY": 210,
-      "radius": 50,
+      "radius": 60,
       "onceOnly": false
     },
     {
@@ -17,7 +17,7 @@
       "action": "refine",
       "imageX": 215,
       "imageY": 235,
-      "radius": 48,
+      "radius": 58,
       "onceOnly": false
     },
     {
@@ -27,7 +27,7 @@
       "action": "rest",
       "imageX": 200,
       "imageY": 315,
-      "radius": 48,
+      "radius": 58,
       "onceOnly": false
     },
     {
@@ -37,7 +37,7 @@
       "action": "storage",
       "imageX": 540,
       "imageY": 228,
-      "radius": 48,
+      "radius": 58,
       "onceOnly": false
     },
     {
@@ -47,7 +47,7 @@
       "action": "breakthrough",
       "imageX": 400,
       "imageY": 285,
-      "radius": 50,
+      "radius": 60,
       "onceOnly": false
     },
     {
@@ -57,7 +57,7 @@
       "action": "travel",
       "imageX": 468,
       "imageY": 178,
-      "radius": 52,
+      "radius": 62,
       "targetScene": "overworld",
       "targetImageX": 620,
       "targetImageY": 300

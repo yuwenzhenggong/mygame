@@ -209,6 +209,10 @@ namespace XianXia.World
                 var expMsg = session.GainExp(e.Def.exp);
                 if (!string.IsNullOrEmpty(expMsg)) ui.AppendLog(expMsg);
 
+                // 任务进度（只统计任务指定的敌人）
+                var questMsg = session.ReportKill(e.Def.id);
+                if (!string.IsNullOrEmpty(questMsg)) ui.AppendLog(questMsg);
+
                 ui.RefreshHud();
             }
 

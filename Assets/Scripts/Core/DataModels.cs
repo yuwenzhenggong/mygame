@@ -20,6 +20,31 @@ namespace XianXia.Data
         public string name;
         public string desc;
         public int maxHpBonus;
+
+        // 战斗加成（只在炼化出来的异能上生效）
+        public int damageBonus;            // 普攻额外伤害
+        public float damageReduction;      // 受到伤害减免（0~1）
+        public float cooldownReduction;    // 普攻冷却缩短（0~1）
+
+        public bool refinable;             // true = 只能从炼化台获得
+    }
+
+    // 任务
+    [Serializable]
+    public class QuestTable
+    {
+        public List<QuestDef> quests = new List<QuestDef>();
+    }
+
+    [Serializable]
+    public class QuestDef
+    {
+        public string id;
+        public string name;
+        public string desc;
+        public string targetEnemy;   // 要杀的敌人 id
+        public int targetCount = 1;
+        public int rewardExp;
     }
 
     // 场景里可以互动的东西（售货机、长椅、地铁口……）

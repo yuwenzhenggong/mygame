@@ -9,6 +9,7 @@ namespace XianXia
         public List<AbilityDef> Abilities = new List<AbilityDef>();
         public List<InteractionDef> Interactions = new List<InteractionDef>();
         public List<EventDef> Events = new List<EventDef>();
+        public List<QuestDef> Quests = new List<QuestDef>();
 
         readonly Dictionary<string, AbilityDef> _abilityById = new Dictionary<string, AbilityDef>();
         readonly Dictionary<string, InteractionDef> _interactionById = new Dictionary<string, InteractionDef>();
@@ -26,6 +27,9 @@ namespace XianXia
 
             var eventTable = DataLoader.Load<EventTable>("Data/events");
             if (eventTable != null && eventTable.events != null) lib.Events = eventTable.events;
+
+            var questTable = DataLoader.Load<QuestTable>("Data/quests");
+            if (questTable != null && questTable.quests != null) lib.Quests = questTable.quests;
 
             foreach (var a in lib.Abilities)
                 if (a != null && !string.IsNullOrEmpty(a.id)) lib._abilityById[a.id] = a;
@@ -58,6 +62,12 @@ namespace XianXia
             if (string.IsNullOrEmpty(id)) return null;
             EventDef e;
             return _eventById.TryGetValue(id, out e) ? e : null;
+        }
+
+        // 本 Demo 只有一条主线任务
+        public QuestDef MainQuest
+        {
+            get { return Quests != null && Quests.Count > 0 ? Quests[0] : null; }
         }
     }
 }

@@ -67,6 +67,7 @@ namespace XianXia
             if (amount == 0) return null;
 
             State.exp += amount;
+            State.totalExp += amount;
             int levelUps = 0;
             while (State.exp >= ExpToNext)
             {
@@ -214,6 +215,163 @@ namespace XianXia
 
             Debug.LogWarning("[Session] 未知效果类型: " + effect.type);
             return null;
+        }
+
+        // ---------------- 任务 ----------------
+
+        public QuestDef MainQuest => Content.MainQuest;
+        public bool QuestAccepted => State.questState == "进行中";
+        public bool QuestCompleted => State.questState == "已完成";
+
+        public string QuestProgressText()
+        {
+            var q = MainQuest;
+            if (q == null) return "";
+
+            if (State.questState == "已完成") return "<color=#7ee787>「" + q.name + "」已完成</color>";
+            if (State.questState == "进行中")
+                return "「" + q.name + "」　清剿打手 " + State.questKills + " / " + q.targetCount;
+            return "「" + q.name + "」　未接取";
+        }
+
+        public string AcceptQuest()
+        {
+            var q = MainQuest;
+            if (q == null) return null;
+
+            if (State.questState == "进行中") return "这单委托已经在做了。";
+            if (State.questState == "已完成") return "这单委托已经完成了。";
+
+            State.questState = "进行中";
+            State.questKills = 0;
+            return "<color=#8ad7ff>接取委托「" + q.name + "」：</color>" + q.desc;
+        }
+
+        // 击杀上报；没进展就返回 null
+        public string ReportKill(string enemyId)
+        {
+            var q = MainQuest;
+            if (q == null || State.questState != "进行中") return null;
+            if (enemyId != q.targetEnemy) return null;
+
+            State.questKills++;
+            if (State.questKills < q.targetCount) return null;
+
+            State.questState = "已完成";
+
+            var msg = "<color=#7ee787>委托「" + q.name + "」完成</color>";
+            var expMsg = GainExp(q.rewardExp);
+            if (!string.IsNullOrEmpty(expMsg)) msg += "　" + expMsg;
+            return msg;
+        }
+
+        // ---------------- 炼化 ----------------
+
+        public bool CanRefine => State.resonanceCount > 0;
+
+        public List<AbilityDef> RefinableAbilities()
+        {
+            var list = new List<AbilityDef>();
+            foreach (var a in Content.Abilities)
+            {
+                if (a == null || !a.refinable) continue;
+                if (State.abilities.Contains(a.id)) continue;
+                list.Add(a);
+            }
+            return list;
+        }
+
+        public string Refine(string abilityId)
+        {
+            if (State.resonanceCount <= 0) return null;
+
+            var def = Content.GetAbility(abilityId);
+            if (def == null || !def.refinable) return null;
+            if (State.abilities.Contains(abilityId)) return null;
+
+            State.resonanceCount--;
+            State.refineCount++;
+            State.abilities.Add(abilityId);
+            ClampHp();
+
+            var msg = "<color=#7ee787>炼化成功，获得异能「" + def.name + "」</color>";
+            var expMsg = GainExp(20);
+            if (!string.IsNullOrEmpty(expMsg)) msg += "\n" + expMsg;
+            return msg;
+        }
+
+        // ---------------- 据点 ----------------
+
+        public string HealFull()
+        {
+            State.hp = MaxHp;
+            return "<color=#7ee787>躺了一会儿，气血全满（" + MaxHp + "）。</color>";
+        }
+
+        public string StorageText()
+        {
+            return "异能残响　×" + State.resonanceCount + "\n" +
+                   "突破素材　×" + State.breakthroughMaterials + "\n" +
+                   "炼化次数　" + State.refineCount + "\n" +
+                   "累计经验　" + State.totalExp;
+        }
+
+        // ---------------- 战斗加成 ----------------
+
+        public int TotalDamageBonus()
+        {
+            int sum = 0;
+            foreach (var id in State.abilities)
+            {
+                var a = Content.GetAbility(id);
+                if (a != null) sum += a.damageBonus;
+            }
+            return sum;
+        }
+
+        public float TotalDamageReduction()
+        {
+            float sum = 0f;
+            foreach (var id in State.abilities)
+            {
+                var a = Content.GetAbility(id);
+                if (a != null) sum += a.damageReduction;
+            }
+            return Mathf.Clamp(sum, 0f, 0.8f);
+        }
+
+        public float TotalCooldownReduction()
+        {
+            float sum = 0f;
+            foreach (var id in State.abilities)
+            {
+                var a = Content.GetAbility(id);
+                if (a != null) sum += a.cooldownReduction;
+            }
+            return Mathf.Clamp(sum, 0f, 0.6f);
+        }
+
+        // ---------------- 突破条件 ----------------
+
+        public const int BreakthroughExpNeed = 100;
+        public const int BreakthroughMaterialNeed = 2;
+        public const int BreakthroughRefineNeed = 1;
+
+        static string Mark(bool ok)
+        {
+            return ok ? "<color=#7ee787>√</color>" : "<color=#ffa657>×</color>";
+        }
+
+        public string BreakthroughPanelText(out bool allOk)
+        {
+            bool expOk = State.totalExp >= BreakthroughExpNeed;
+            bool refineOk = State.refineCount >= BreakthroughRefineNeed;
+            bool matOk = State.breakthroughMaterials >= BreakthroughMaterialNeed;
+            allOk = expOk && refineOk && matOk;
+
+            return Mark(expOk) + " 累计经验　" + State.totalExp + " / " + BreakthroughExpNeed + "\n" +
+                   Mark(refineOk) + " 炼化残响　" + State.refineCount + " / " + BreakthroughRefineNeed + "\n" +
+                   Mark(matOk) + " 突破素材　" + State.breakthroughMaterials + " / " + BreakthroughMaterialNeed;
         }
 
         // ---------------- 显示 ----------------

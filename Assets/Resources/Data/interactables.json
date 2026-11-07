@@ -1,58 +1,53 @@
-{
+﻿{
   "interactables": [
     {
       "id": "i_safe_quest",
       "scene": "safehouse",
       "name": "情报板",
-      "action": "event",
+      "action": "quest",
       "imageX": 240,
       "imageY": 105,
       "radius": 90,
-      "eventId": "e_safe_board",
       "onceOnly": false
     },
     {
       "id": "i_safe_refine",
       "scene": "safehouse",
       "name": "炼化台",
-      "action": "event",
+      "action": "refine",
       "imageX": 130,
       "imageY": 230,
       "radius": 85,
-      "eventId": "e_safe_refine",
       "onceOnly": false
     },
     {
       "id": "i_safe_rest",
       "scene": "safehouse",
       "name": "休整床",
-      "action": "event",
+      "action": "rest",
       "imageX": 465,
       "imageY": 235,
       "radius": 85,
-      "eventId": "e_safe_rest",
       "onceOnly": false
     },
     {
       "id": "i_safe_storage",
       "scene": "safehouse",
       "name": "物资箱",
-      "action": "event",
+      "action": "storage",
       "imageX": 102,
       "imageY": 322,
       "radius": 80,
-      "eventId": "e_safe_storage",
       "onceOnly": false
     },
     {
       "id": "i_safe_breakthrough",
       "scene": "safehouse",
       "name": "突破点",
-      "action": "event",
+      "action": "breakthrough",
       "imageX": 500,
       "imageY": 275,
       "radius": 80,
-      "eventId": "e_safe_break",
       "onceOnly": false
     },
     {

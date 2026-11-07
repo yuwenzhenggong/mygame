@@ -4,25 +4,53 @@
       "id": "a_sight",
       "name": "灵视",
       "desc": "能看见不该看见的东西。",
-      "maxHpBonus": 0
+      "maxHpBonus": 0,
+      "refinable": false
     },
     {
       "id": "a_force",
       "name": "念力",
       "desc": "一米之内的东西，你说动它就动。",
-      "maxHpBonus": 10
+      "maxHpBonus": 10,
+      "refinable": false
     },
     {
       "id": "a_echo",
       "name": "回响",
       "desc": "听见几秒钟之前的声音。",
-      "maxHpBonus": 0
+      "maxHpBonus": 0,
+      "refinable": false
     },
     {
       "id": "a_heal",
       "name": "再生",
       "desc": "伤口会自己合上。",
-      "maxHpBonus": 20
+      "maxHpBonus": 20,
+      "refinable": false
+    },
+    {
+      "id": "a_burn",
+      "name": "灼击",
+      "desc": "普攻附带灼烧，每次多打 4 点伤害。",
+      "maxHpBonus": 0,
+      "damageBonus": 4,
+      "refinable": true
+    },
+    {
+      "id": "a_iron",
+      "name": "铁躯",
+      "desc": "皮肉如铁，受到的伤害降低 20%。",
+      "maxHpBonus": 0,
+      "damageReduction": 0.2,
+      "refinable": true
+    },
+    {
+      "id": "a_foresight",
+      "name": "预判",
+      "desc": "看穿对方的出手，普攻冷却缩短约四分之一。",
+      "maxHpBonus": 0,
+      "cooldownReduction": 0.24,
+      "refinable": true
     }
   ]
 }

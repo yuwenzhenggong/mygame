@@ -183,6 +183,19 @@ public static class ProjectSetup
                     failures++;
                 }
             }
+            else if (def.action == "quest")
+            {
+                if (content.MainQuest == null)
+                {
+                    Debug.LogError("[SelfCheck] 互动点 " + def.id + " 是任务板，但 quests.json 里没有任务");
+                    failures++;
+                }
+            }
+            else if (def.action == "refine" || def.action == "rest" ||
+                     def.action == "storage" || def.action == "breakthrough")
+            {
+                // 据点功能点，不需要 eventId
+            }
             else if (content.GetEvent(def.eventId) == null)
             {
                 Debug.LogError("[SelfCheck] 互动点 " + def.id + " 引用了不存在的事件: " + def.eventId);

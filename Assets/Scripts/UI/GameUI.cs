@@ -27,6 +27,7 @@ namespace XianXia.UI
         Image _hpFill;
         Text _hpText;
         Text _lootText;
+        Text _questText;
 
         RectTransform _hudRoot;
         bool _hudVisible;
@@ -185,6 +186,12 @@ namespace XianXia.UI
                 new Color(0.85f, 0.9f, 1f, 0.95f), TextAnchor.MiddleLeft);
             UIFactory.Anchor(_lootText.rectTransform, new Vector2(0f, 1f), new Vector2(0f, 1f),
                 new Vector2(12f, -44f), new Vector2(240f, -28f));
+
+            // 任务追踪
+            _questText = UIFactory.NewText("Quest", parent, "", UIFactory.SizeSmall,
+                new Color(0.95f, 0.88f, 0.62f, 0.95f), TextAnchor.MiddleLeft);
+            UIFactory.Anchor(_questText.rectTransform, new Vector2(0f, 1f), new Vector2(0f, 1f),
+                new Vector2(12f, -62f), new Vector2(300f, -46f));
         }
 
         void Update()
@@ -204,6 +211,7 @@ namespace XianXia.UI
             // HUD 打开时状态栏里已经有血量数字，常驻血条就先藏起来，免得重叠
             if (_hpBar != null) _hpBar.gameObject.SetActive(!_hudVisible);
             if (_lootText != null) _lootText.gameObject.SetActive(!_hudVisible);
+            if (_questText != null) _questText.gameObject.SetActive(!_hudVisible);
         }
 
         // 给战斗脚本调用：数值变了立刻刷新界面
@@ -441,6 +449,175 @@ namespace XianXia.UI
             Refresh();
         }
 
+        // ---------------- 据点互动分流 ----------------
+
+        public class Choice
+        {
+            public string Label;
+            public UnityEngine.Events.UnityAction OnClick;
+        }
+
+        public void HandleInteraction(InteractionDef def)
+        {
+            if (def == null || Session == null) return;
+
+            switch (def.action)
+            {
+                case "refine": OpenRefine(); break;
+                case "rest": DoRest(); break;
+                case "storage": OpenStorage(); break;
+                case "quest": OpenQuest(); break;
+                case "breakthrough": OpenBreakthrough(); break;
+                default: OpenEvent(def); break;
+            }
+        }
+
+        void OpenEvent(InteractionDef def)
+        {
+            var ev = Content.GetEvent(def.eventId);
+            if (ev == null)
+            {
+                AppendLog("<color=#ff6b6b>事件不存在: " + def.eventId + "</color>");
+                return;
+            }
+            ShowEvent(ev);
+        }
+
+        void OpenRefine()
+        {
+            if (!Session.CanRefine)
+            {
+                ShowMessage("炼化台", "残响不够。去外面打点异能者或异兽，把残响带回来。");
+                return;
+            }
+
+            var list = Session.RefinableAbilities();
+            if (list.Count == 0)
+            {
+                ShowMessage("炼化台", "能炼化的异能都已经炼完了。");
+                return;
+            }
+
+            var body = "锅底的青火烧得很稳。把一缕残响丢进去，只烧得出一样东西：\n";
+            foreach (var a in list)
+                body += "\n· <color=#8ab4ff>" + a.name + "</color>　" + a.desc;
+
+            var choices = new List<Choice>();
+            foreach (var a in list)
+            {
+                var captured = a;
+                choices.Add(new Choice { Label = "炼化「" + captured.name + "」", OnClick = () => DoRefine(captured.id) });
+            }
+            choices.Add(new Choice { Label = "先不炼", OnClick = CloseEvent });
+
+            ShowChoices("炼化台", body, choices);
+        }
+
+        void DoRefine(string abilityId)
+        {
+            var msg = Session.Refine(abilityId);
+            if (string.IsNullOrEmpty(msg)) { CloseEvent(); return; }
+
+            AppendLog(msg);
+            Refresh();
+            ShowResult("炼化", msg);
+        }
+
+        void DoRest()
+        {
+            if (Session.State.hp >= Session.MaxHp)
+            {
+                ShowMessage("休整床", "你现在状态很好，不需要休息。");
+                return;
+            }
+
+            var msg = Session.HealFull();
+            AppendLog(msg);
+            Refresh();
+            ShowResult("休整床", msg);
+        }
+
+        void OpenStorage()
+        {
+            ShowMessage("物资箱", Session.StorageText());
+        }
+
+        void OpenQuest()
+        {
+            var q = Session.MainQuest;
+            if (q == null) { ShowMessage("情报板", "板上什么都没有。"); return; }
+
+            if (Session.QuestCompleted)
+            {
+                ShowMessage("情报板", "「" + q.name + "」\n\n这单已经结了，你在板上记了一笔。");
+                return;
+            }
+
+            if (Session.QuestAccepted)
+            {
+                ShowMessage("情报板", "「" + q.name + "」\n\n" + Session.QuestProgressText());
+                return;
+            }
+
+            ShowChoices("情报板",
+                "一张压在图钉下的照片，背面写着「" + q.name + "」。\n\n" + q.desc,
+                new List<Choice>
+                {
+                    new Choice { Label = "接下这单", OnClick = DoAcceptQuest },
+                    new Choice { Label = "再看看", OnClick = CloseEvent }
+                });
+        }
+
+        void DoAcceptQuest()
+        {
+            var msg = Session.AcceptQuest();
+            if (!string.IsNullOrEmpty(msg)) AppendLog(msg);
+            Refresh();
+            ShowResult("情报板", msg ?? "……");
+        }
+
+        void OpenBreakthrough()
+        {
+            bool allOk;
+            var body = Session.BreakthroughPanelText(out allOk);
+            body += allOk
+                ? "\n\n<color=#7ee787>三个条件都齐了。</color>"
+                : "\n\n<color=#ffa657>还差点火候。</color>";
+
+            ShowMessage("突破点", body);
+        }
+
+        void ShowMessage(string title, string body)
+        {
+            ShowChoices(title, body, new List<Choice> { new Choice { Label = "离开", OnClick = CloseEvent } });
+        }
+
+        // 通用弹窗：标题 + 正文 + 若干按钮
+        public void ShowChoices(string title, string body, List<Choice> choices)
+        {
+            if (_eventPanel == null) return;
+
+            _eventPanel.gameObject.SetActive(true);
+            _eventTitle.text = title;
+            _eventBody.text = body;
+            ClearOptionButtons();
+
+            if (choices != null)
+            {
+                foreach (var c in choices)
+                {
+                    var captured = c;
+                    var btn = UIFactory.NewButton("Option", _eventOptions, captured.Label, UIFactory.SizeNormal,
+                        () => { if (captured.OnClick != null) captured.OnClick(); });
+                    var le = btn.gameObject.AddComponent<LayoutElement>();
+                    le.minHeight = 32f;
+                    le.preferredHeight = 32f;
+                }
+            }
+
+            Refresh();
+        }
+
         // ---------------- 对外 ----------------
 
         public void SetPrompt(string text)
@@ -482,6 +659,9 @@ namespace XianXia.UI
                 _lootText.text = "<color=#8ad7ff>残响 ×" + Session.State.resonanceCount +
                                  "</color>　<color=#ffd479>素材 ×" + Session.State.breakthroughMaterials + "</color>";
             }
+
+            // 任务追踪
+            if (_questText != null && Session != null) _questText.text = Session.QuestProgressText();
 
             // 事件面板开着、或者人已经倒下 → 冻结走动和互动
             bool modalOpen = _eventPanel != null && _eventPanel.gameObject.activeSelf;

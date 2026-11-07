@@ -90,7 +90,7 @@ namespace XianXia.World
 
         void Attack()
         {
-            _cooldownLeft = Cooldown;
+            _cooldownLeft = CurrentCooldown();
 
             _attackFacing = _walker != null ? _walker.CurrentFacing : Facing.Front;
             if (_walker != null) _walker.PlayAttack();
@@ -103,16 +103,39 @@ namespace XianXia.World
             _pendingHitLeft = Mathf.Max(0f, ImpactDelay);
         }
 
+        // 伤害 / 冷却 / 减伤都受已炼化的异能影响
+        int CurrentDamage()
+        {
+            var ui = GameUI.Instance;
+            if (ui == null || ui.Session == null) return Damage;
+            return Damage + ui.Session.TotalDamageBonus();
+        }
+
+        float CurrentCooldown()
+        {
+            var ui = GameUI.Instance;
+            if (ui == null || ui.Session == null) return Cooldown;
+            return Cooldown * (1f - ui.Session.TotalCooldownReduction());
+        }
+
+        int ReduceIncoming(int amount)
+        {
+            var ui = GameUI.Instance;
+            if (ui == null || ui.Session == null) return amount;
+            return Mathf.Max(1, Mathf.RoundToInt(amount * (1f - ui.Session.TotalDamageReduction())));
+        }
+
         void ResolveHit()
         {
             var center = (Vector2)transform.position + FacingDir(_attackFacing) * Reach;
+            int dmg = CurrentDamage();
 
             var enemies = FindObjectsOfType<Enemy>();
             foreach (var e in enemies)
             {
                 if (e == null) continue;
                 if (Vector2.Distance((Vector2)e.transform.position, center) <= Radius)
-                    e.TakeDamage(Damage);
+                    e.TakeDamage(dmg);
             }
         }
 
@@ -127,8 +150,9 @@ namespace XianXia.World
             SetTint(new Color(1f, 0.4f, 0.4f));
             _flashLeft = -1f;
 
-            var msg = ui.Session.ChangeHp(-amount);
-            ui.AppendLog(msg != null ? "<color=#ff6b6b>受到 " + amount + " 点伤害</color>" : "<color=#ff6b6b>受到伤害</color>");
+            int actual = ReduceIncoming(amount);
+            var msg = ui.Session.ChangeHp(-actual);
+            ui.AppendLog("<color=#ff6b6b>受到 " + actual + " 点伤害</color>");
             ui.RefreshHud();
 
             if (ui.Session.State.hp <= 0) Die();

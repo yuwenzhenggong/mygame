@@ -82,15 +82,9 @@ namespace XianXia.World
                     return;
                 }
 
-                var ev = ui.Content.GetEvent(best.Def.eventId);
-                if (ev == null)
-                {
-                    ui.AppendLog("<color=#ff6b6b>事件不存在: " + best.Def.eventId + "</color>");
-                    return;
-                }
-
+                // 其余都交给 UI 按 action 分流（event / refine / rest / storage / quest / breakthrough）
                 ui.Session.MarkInteractionUsed(best.Def);
-                ui.ShowEvent(ev);
+                ui.HandleInteraction(best.Def);
             }
         }
     }

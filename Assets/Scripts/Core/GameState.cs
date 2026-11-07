@@ -29,6 +29,16 @@ namespace XianXia
         public int resonanceCount;          // 异能残响
         public int breakthroughMaterials;   // 突破素材
 
+        // 累计经验（等级会重置 exp，突破条件用这个才稳定）
+        public int totalExp;
+
+        // 任务
+        public string questState = "未接取";   // 未接取 / 进行中 / 已完成
+        public int questKills;
+
+        // 炼化次数（突破条件之一）
+        public int refineCount;
+
         // 已击杀的刷怪点 id（死亡后不再重复刷新，除非重开）
         public List<string> deadEnemies = new List<string>();
 

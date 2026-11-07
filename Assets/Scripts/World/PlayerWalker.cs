@@ -259,7 +259,9 @@ namespace XianXia.World
                     // 让画布底边始终落在玩家脚下，不会因切图跳位。
                     _body.transform.localPosition =
                         new Vector3(0f, attackSprite.bounds.size.y * 0.5f, 0f);
-                    _body.flipX = (!_attackFaceLeft) ^ _attackInvertFlip;
+                    // 注意：出拳素材未翻转时是【朝右打】，和跑步素材"未翻转=朝左"相反，
+                    // 所以这里用 _attackFaceLeft（而不是取反）。
+                    _body.flipX = _attackFaceLeft ^ _attackInvertFlip;
                     return;
                 }
             }

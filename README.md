@@ -1,256 +1,134 @@
-# 修仙 Demo —— 像素风、可走路、数据驱动的最小骨架
+# 都市异能 Demo
 
-用 **Unity 2021.3.19f1c1** + C# 搭的「鬼谷八荒 / 太吾绘卷」类型游戏的地基。
+一个 Unity 2021.3.19f1c1 制作的 2D 像素风「都市异能 ARPG + 据点经营」原型。
 
-三条核心约定：
+当前版本已经完成多场景探索和基础战斗，可以用完整的一套流程验证：
 
-- **能走路**：WASD / 方向键在整幅街道场景上自由走动，遮罩碰撞
-- **美术走像素风**（基准 640×360，PPU 32）——一个人能画得动
-- **内容走 JSON**（地图 / 境界 / 功法 / 事件）——加内容不用写代码
+**安全屋 → 街道 → 丛林 → 打怪 → 返回安全屋**
 
----
-
-## 一、怎么打开
-
-1. 打开 **Unity Hub**（`E:\Unity\Unity Hub\Unity Hub.exe`）
-2. 点「打开」→ 选择 `E:\mygame` 目录
-3. 编辑器打开后，点顶部的 ▶ **Play**
-
-不需要往场景里拖任何东西。`Bootstrap.cs` 会自动建好世界和 HUD。
-
-> 版本必须选 `2021.3.19f1c1`（中国版），换版本会触发资源重导和 API 差异。
+战斗后的掉落、炼化、任务和突破尚未接入，详见文末「当前缺口」。
 
 ---
 
-## 二、走路与地图
+## 运行
 
-### 操作
+1. 打开 Unity Hub。
+2. 用 **Unity 2021.3.19f1c1** 打开本目录 `E:\mygame`。
+3. 打开 `Assets/Scenes/Main.unity`，点击 Play。
 
-| 键 | 作用 |
+场景和 HUD 由 `Bootstrap.cs` 自动创建，不需要手动往场景里拖对象。
+
+---
+
+## 操作
+
+| 按键 | 功能 |
 |---|---|
-| **W A S D** 或 **方向键** | 移动（八方向，斜走不加速） |
+| `WASD` / 方向键 | 八方向移动 |
+| `E` | 与附近的门、路灯、售货机等互动 |
+| `J` | 普通攻击 |
+| `Esc` | 打开或关闭状态 HUD |
 
-撞上建筑、车辆、树木会滑着走，不会卡死。事件面板弹出时移动会被冻结。
-
-### 地图 = 一张整幅背景图 + 一张碰撞遮罩
-
-现在没有瓦片地图了。整个场景是**一张画好的背景图**，角色在上面走，场景边界和障碍物
-由一张**字符遮罩**决定：
-
-```
-Assets/Resources/Art/city_street.png      背景图 1672x941
-Assets/Resources/Data/scene_mask.txt      碰撞遮罩 105 x 59 格（每格 16px）
-Assets/Resources/Data/scene.json          尺寸、格子大小、出生点
-```
-
-`scene_mask.txt` 长这样（第 0 行是图片顶部）：
-
-```
-// 碰撞遮罩：'#' = 不可走，'.' = 可走
-// 每格 16 像素；网格宽 105 x 高 59；第 0 行是图片顶部
-///.....................….................#///…（共 105 列）
-```
-
-**手改碰撞**：用任何文本编辑器打开 `scene_mask.txt`，把 `#` 改成 `.` 就是打通，
-反过来就是加墙。改完回编辑器直接 Play 生效，不用编译。
-
-**换另一张场景图**：
-
-1. 图丢进 `Assets/Resources/Art/`（导入设置会自动套用）
-2. 改 `scene.json` 的 `image` / `imageWidth` / `imageHeight` / `spawnImageX` / `spawnImageY`
-3. 遮罩要按新图重新生成（见下面的「遮罩是怎么来的」）
-
-### 遮罩是怎么来的
-
-`city_street` 这张遮罩是脚本按三条规则自动生成的，不是手画：
-
-1. **建筑带**：图片 y < 250 和 y > 880 的区域整片不可走（上下两排楼）
-2. **手标矩形**：4 辆车 + 地铁口 + 左下/右下建筑 + 右侧结构（共 9 个矩形）
-3. **植被**：绿色像素占比 > 30% 的格子判为不可走，再**向外膨胀 1 格**
-   ——不膨胀的话树干（棕色）和花坛边缘会漏掉，角色会站在树上
-
-改完这三条要重新生成遮罩。如果你想直接手改 `scene_mask.txt`，那就不用管了。
-
-### 现有场景
-
-1672×941，PPU 32 下是 **52.25 × 29.41 个世界单位**。相机视野 20 × 11.25，
-所以一次能看到大约 1/3 的场景宽度，需要滚动探索。
-
-可走区域是从远侧人行道 → 机动车道 → 近侧人行道的一条横向走廊，
-建筑、树、花坛、车辆都挡死。
-
-### 主角
-
-主角是四向图，源文件是带**真 alpha 通道**的 1536×1024 四联图（WorkBuddy 处理后导出的 RGBA PNG），
-已经切好并放到 `Assets/Resources/Art/`：
-
-| 文件 | 朝向 | 何时用 |
-|---|---|---|
-| `hero_front.png` | 正面对镜头 | 往下走 / 初始 |
-| `hero_right.png` | 右侧身 | 往右走 |
-| `hero_back.png` | 背影 | 往上走 |
-| `hero_left.png` | 左侧身 | 往左走 |
-
-四个都是 **48×64** 的统一画布，内容水平居中、脚底对齐，所以切换朝向时不会跳位。
-
-**走图规则**（`PlayerWalker.UpdateFacing`）：竖着走用正/背视图，横着走用左右视图；
-输入同时存在时，竖直分量更大就优先用竖视图。想改成「斜走也用左右视图」改那几行判断即可。
-
-**换一套角色图**：把新的四张图按同名覆盖就行，尺寸保持 48×64 即可（不同尺寸也能跑，
-只要改 `WorldRoot.BuildPlayer` 里 body 的 `localPosition.y`——它是精灵高度的一半）。
-
-### 碰撞怎么算的
-
-没有用 `Rigidbody2D`。俯视角走格用不上物理引擎，`PlayerWalker.cs` 自己算
-「脚底一个小矩形和周围遮罩格是否重叠」，两个轴分开移动，所以撞墙能贴着墙滑。
-
-- 身体上半身可以略微探进障碍里，走位手感更自然（只测脚下，不测全身）
-- 图外一律当作墙，走不出去
-- 半宽/半高在 `PlayerWalker` 上，可以直接在 Inspector 里调
+HUD 中提供存档、读档和重开按钮。进入互动面板时，移动和战斗会暂停。
 
 ---
 
-## 三、像素管线
+## 当前完成内容
 
-### 基准参数
+### 场景
 
-| 参数 | 值 | 定义在哪 |
-|---|---|---|
-| 逻辑分辨率 | **640×360** | `PixelArtSettings.ReferenceWidth/Height` |
-| Pixels Per Unit | **32** | `PixelArtSettings.PixelsPerUnit` |
-| 地形格边长 | 32 px = 1 世界单位 | `PixelArtSettings.TileSize` |
-| 窗口默认 | 1280×720（正好 2 倍） | `ProjectSetup.SetupPlayer` |
+目前有三个可切换场景：
 
-**为什么是 640×360 而不是 320×180**：中文最小要 12px 才看得清，再小就糊成一片。
-这个游戏文字量大，320×180 一行放不下几个字。
+- `safehouse`：安全屋，也是默认出生点和死亡复活点。
+- `overworld`：都市街道，包含多个调查互动点。
+- `jungle`：丛林战斗区，包含固定敌人刷新点。
 
-### 美术放哪
+场景配置位于 `Assets/Resources/Data/scenes.json`，每个场景由一张背景图、一份字符碰撞遮罩和出生点组成。传送点、死亡复活和存档都会记录当前场景。
 
-```
-Assets/Resources/Art/          ← 贴图全丢这里，导入设置自动套用
-Assets/Resources/Fonts/        ← 字体丢这里，渲染模式自动套用
-```
+### 战斗
 
-`Assets/Editor/PixelArtImporter.cs` 会自动设成：
-Filter Mode = **Point**、Compression = **None**、Mip Maps = **关**、
-PPU = **32**、Mesh Type = **Full Rect**。
+- 玩家普通攻击：`J`，前方圆形范围判定，冷却 0.5 秒。
+- 三种配置化敌人：异能者打手、异兽、精英异能者。
+- 敌人会朝玩家直线追击，按间隔近身攻击，受击时闪红并显示血条。
+- 玩家受击有无敌时间，生命归零后满血回到安全屋。
+- 敌人和互动标记会随场景切换重建。
 
-### 字体
+### 角色动画
 
-已装好 **Fusion Pixel Font 12px 简体中文**（OFL 协议，可商用）：
-`Assets/Resources/Fonts/fusion-pixel-12px-zh_hans.ttf`
+- 跑步：`hero_run_down_0.png` 至 `hero_run_down_9.png`，10 帧循环。
+- 普通攻击：`hero_attack_0.png` 至 `hero_attack_20.png`，21 帧，约 0.525 秒。
+- 跑步和攻击都只维护一套左右方向素材，朝右时通过 `SpriteRenderer.flipX` 翻转。
+- 攻击序列帧采用 120×120 透明画布；角色本体约 64 像素高，底边与脚底对齐，因此切回站立动画时不会跳位。
 
-`PixelFontImporter.cs` 会把字体设为 **Hinted Raster**（关抗锯齿）。
-这是像素游戏最容易漏的一步——不关的话 12px 中文放大到 24px 是一团灰雾。
+攻击帧由视频逐帧素材经过绿幕抠除、去绿边、缩放下采样和统一画布对齐后生成。后续替换素材时，只要保持 `hero_attack_<数字>.png` 连号命名即可，代码会从 0 开始加载，缺帧自动停止。
 
-换字体：把 ttf 丢进 `Assets/Resources/Fonts/`，删掉旧的，文件名随意。
+### UI 与存档
 
-### 相机
+- 常驻玩家血条。
+- `Esc` 状态面板显示等级、生命、经验和已获得异能。
+- 互动提示、事件选项、结果文字和战斗日志。
+- 单存档 JSON，记录数值、异能、一次性互动、当前场景和玩家坐标。
 
-场景里的 Main Camera 挂了 **PixelPerfectCamera**：
-`assetsPPU = 32`、`refResolution = 640×360`、`pixelSnapping = on`、`upscaleRT = off`。
-
-`CameraFollow.cs` 负责跟随 + 地图边界夹紧。**故意不做平滑插值**——
-像素游戏里相机停在半像素上会让整屏抖动，直接跟随最稳。
+存档位置由 Unity 的 `Application.persistentDataPath` 决定，文件名为 `save_01.json`。
 
 ---
 
-## 四、目录结构
+## 数据驱动内容
 
-```
+主要配置表都位于 `Assets/Resources/Data/`：
+
+| 文件 | 内容 |
+|---|---|
+| `scenes.json` | 场景注册表、场景图、碰撞遮罩和出生点 |
+| `interactables.json` | 互动点、传送点和触发条件 |
+| `events.json` | 文本事件、选项和效果 |
+| `enemies.json` | 敌人属性、掉落数值和固定刷新点 |
+| `abilities.json` | 已获得异能及其数值加成 |
+
+碰撞遮罩是纯文本：每行对应场景图的一行网格，`#` 表示不可走，`.` 表示可走。修改遮罩后重新进入 Play 即可生效。
+
+---
+
+## 工程结构
+
+```text
 Assets/
 ├─ Scripts/
-│  ├─ Bootstrap.cs              自动入口（Play 就跑起来）
+│  ├─ Bootstrap.cs                 自动入口
 │  ├─ Core/
-│  │  ├─ PixelArtSettings.cs    ★ 像素参数的唯一真源
-│  │  ├─ GameFlow.cs            全局输入闸门（弹窗时冻结移动）
-│  │  ├─ MapModels.cs           地图 JSON 结构
-│  │  ├─ DataModels.cs          境界/功法/事件的 JSON 结构
-│  │  ├─ GameState.cs           存档里的全部数据
-│  │  ├─ DataLoader.cs          读 Resources 下的 JSON
-│  │  ├─ SaveSystem.cs          存档 / 读档 / 删档
-│  │  └─ ContentLibrary.cs      把配置表读进内存，按 id 查询
-│  ├─ World/
-│  │  ├─ SceneData.cs           ★ 背景图 + 遮罩 → 可查询的碰撞数据
-│  │  ├─ WorldRoot.cs           ★ 运行时铺背景、放玩家、挂相机
-│  │  ├─ PlayerWalker.cs        ★ WASD 移动 + 碰撞
-│  │  └─ CameraFollow.cs        跟随 + 边界夹紧
+│  │  ├─ GameState.cs              存档数据
+│  │  ├─ SaveSystem.cs             JSON 存档
+│  │  ├─ DataLoader.cs             Resources 配置加载
+│  │  ├─ ContentLibrary.cs         配置查询
+│  │  └─ SceneModels.cs / EnemyModels.cs
 │  ├─ Gameplay/
-│  │  └─ GameSession.cs         全部玩法逻辑（不含 UI，可命令行测试）
+│  │  └─ GameSession.cs            经验、生命、异能和事件结算
+│  ├─ World/
+│  │  ├─ WorldRoot.cs              场景构建与重建
+│  │  ├─ SceneData.cs              背景、坐标和碰撞
+│  │  ├─ PlayerWalker.cs           移动、跑步和攻击动画
+│  │  ├─ PlayerCombat.cs           普攻、受击和死亡
+│  │  ├─ Enemy.cs                  敌人 AI 与血条
+│  │  ├─ Interactor.cs             互动和传送
+│  │  └─ CameraFollow.cs           相机跟随与边界夹紧
 │  └─ UI/
-│     ├─ UIFactory.cs           纯代码搭 UGUI + 字体加载
-│     └─ GameUI.cs              HUD、事件弹窗、按钮
+│     ├─ GameUI.cs                 HUD、事件面板和日志
+│     └─ UIFactory.cs              运行时 UGUI 构建
 ├─ Editor/
-│  ├─ PixelArtImporter.cs       贴图自动套像素导入设置
-│  ├─ PixelFontImporter.cs      字体自动关抗锯齿
-│  └─ ProjectSetup.cs           生成场景 / 工程配置 / 自检 / 渲染预览图
+│  ├─ PixelArtImporter.cs          像素贴图自动导入设置
+│  ├─ PixelFontImporter.cs         像素字体自动导入设置
+│  └─ ProjectSetup.cs              场景生成、自检和预览截图
 └─ Resources/
-   ├─ Art/                      8 张图：4 张地形 + 4 张主角四向
-   ├─ Fonts/                    像素字体 + 授权
-   └─ Data/                     scene.json / scene_mask.txt / realms / techniques / events
+   ├─ Art/                         场景、角色、敌人和 UI 贴图
+   ├─ Data/                        JSON 配置与碰撞遮罩
+   └─ Fonts/                       中文像素字体
 ```
 
 ---
 
-## 五、加内容：只改 JSON，不碰代码
+## 命令行自检
 
-### 加一个境界
-
-`Assets/Resources/Data/realms.json`：
-
-```json
-{ "id": "lianxu", "name": "炼虚期", "qiRequired": 5000, "maxHp": 5000, "baseAttack": 700, "desc": "……" }
-```
-
-`qiRequired` 是**突破到下一境界**需要的修为，最高境界填 `0`。
-
-### 加一门功法
-
-`Assets/Resources/Data/techniques.json`：
-
-```json
-{ "id": "t_fire", "name": "离火诀", "desc": "……", "attackBonus": 25, "maxHpBonus": 80, "cultivateBonus": 2 }
-```
-
-### 加一个事件
-
-`Assets/Resources/Data/events.json`：
-
-```json
-{
-  "id": "e_my_event",
-  "title": "标题",
-  "text": "玩家看到的故事正文。",
-  "weight": 10,
-  "onceOnly": false,
-  "require": { "minRealm": 0, "minSpiritStones": 0, "hasFlag": "", "notFlag": "" },
-  "options": [
-    {
-      "text": "选项按钮文字",
-      "resultText": "选完之后显示的结果文字",
-      "effects": [
-        { "type": "stat",  "key": "cultivation", "value": 50 },
-        { "type": "stat",  "key": "spiritStones", "value": -20 },
-        { "type": "stat",  "key": "hp", "value": -10 },
-        { "type": "flag",  "key": "met_someone", "value": 1 },
-        { "type": "learn", "key": "t_fire" },
-        { "type": "goto",  "key": "e_next_event" }
-      ]
-    }
-  ]
-}
-```
-
-| type | 作用 | key 填什么 | value |
-|---|---|---|---|
-| `stat` | 改数值 | `hp` / `cultivation` / `spiritStones` | 增量（可为负） |
-| `flag` | 打标记 | 标记名，随便起 | 1 |
-| `learn` | 学功法 | 功法 id | 不用填 |
-| `goto` | 接着播下一个事件 | 事件 id | 不用填 |
-
----
-
-## 六、命令行自检
+先关闭 Unity 编辑器，避免项目被占用：
 
 ```powershell
 & "E:\Unity\2021.3.19f1c1\Editor\Unity.exe" -batchmode -quit `
@@ -259,17 +137,16 @@ Assets/
   -logFile "E:\mygame\unity-run.log"
 ```
 
-退出码 `0` = 全部通过。检查项：
+退出码 `0` 表示通过。自检会检查：
 
-- 三张配置表能否解析
-- 修炼是否真的加修为、突破是否真的进阶
-- 每个事件引用的功法 / 事件 id 是否存在
-- 存档写入后读回数据是否一致
-- 5 张精灵是否都是 Point 过滤、PPU 32
-- 像素字体是否就位
-- **场景背景图能否加载、遮罩行列是否整齐、出生点是否可走且四周有路**
+- 配置表和场景遮罩能否解析。
+- 互动点、传送目标、事件效果引用的 id 是否存在。
+- 三个场景能否加载，出生点是否可走。
+- 敌人刷新点是否合法。
+- 经验、异能、一次性互动和存档往返是否正常。
+- 所有角色、场景、敌人和攻击序列帧是否使用 Point 过滤与 32 PPU。
 
-### 渲染一张预览图
+渲染当前场景预览：
 
 ```powershell
 & "E:\Unity\2021.3.19f1c1\Editor\Unity.exe" -batchmode -quit `
@@ -278,73 +155,34 @@ Assets/
   -logFile "E:\mygame\preview.log"
 ```
 
-会在项目根目录生成 `preview_world.png`（640×360，含 HUD）。
-用来检查像素比例、精灵排序、背景图是否画得出来，不用开编辑器。
-
-编辑器菜单里也有：**修仙 Demo → 渲染世界预览图** / **生成主场景并配置工程**。
-
-> 注意：跑批处理前必须先把 Unity 编辑器关掉，否则会报「另一个实例已打开此项目」。
+输出文件为项目根目录下的 `preview_world.png`。
 
 ---
 
-## 七、像素游戏常见坑
+## 当前缺口
 
-| 症状 | 原因 | 解法 |
-|---|---|---|
-| 图糊了 | Filter Mode 是 Bilinear | 已自动设 Point；图放 `Resources/Art/` 下 |
-| 有噪点脏边 | 贴图被压缩 | 已自动设 Uncompressed |
-| 跑动时抖动 | 没开像素吸附 | 已开 `pixelSnapping` |
-| 精灵尺寸对不齐 | PPU 不统一 | 全部 32，别混用 |
-| 中文成了方块 | 用了内置 Arial | 已装中文字体，别删 `Resources/Fonts` |
-| 文字发灰模糊 | 字体开了抗锯齿 | 已自动设 Hinted Raster |
-| 背景整片不显示 | 精灵路径写错 | 看 `scene.json` 的 `image` 是否等于 Resources 下的路径 |
-| 角色被墙卡住 | 碰撞盒太大 | 调 `PlayerWalker.HalfWidth / HalfHeight` |
+按 Demo 策划案，当前进度大致对应：
 
----
+- **M0 运行验证**：基本完成。
+- **M1 多场景**：完成。
+- **M2 战斗**：主功能完成。
+- **M3 掉落与拾取**：未开始。
+- **M4 据点经营**：未开始。
+- **M5 突破与收尾**：未开始。
+- **M6 验收调优**：未开始。
 
-## 八、下一步该往上加什么
+因此当前战斗还没有经验、残响、素材、掉落物或拾取；安全屋的情报板、炼化台、休整床、物资箱和突破点仍是文本占位。下一步应先接入 M3，把「击杀 → 获得资源 → 炼化 → 突破」的闭环补上。
 
-按性价比排序，一次只做一件：
-
-1. **走进去触发事件**：现在「游历」是随机抽。改成地图上放几个「地点」（坐标 + 事件池），
-   走进某个格子就触发对应事件——这是从「能走」到「有内容」最关键的一步。
-2. **NPC 和对话**：`npcs.json` 放坐标和名字，走过去弹对话。
-3. **换正式美术**：Aseprite 画 32×32 地形 + 32×48 角色，覆盖同名文件即可。
-4. **战斗**：极简回合制替掉现在「拔剑迎战 → 直接扣血」。
-5. **多场景**：`scene.json` 加个 `exits` 字段（走到边界切下一张图），或者用触发点。现在同一份代码换个 `scene.json` + 换张图就是一个新场景。
-
-**别做的事**：不要上 ECS/DOTS，不要引入第三方框架，不要做联机。这个规模用最土的 MonoBehaviour 最省命。
+完整设计见 `docs/DEMO_PLAN.md`。
 
 ---
 
-## 附：美术资源说明
+## 像素资源约定
 
-`Assets/Resources/Art/` 里现在是两类图：
+- 基准分辨率：640×360。
+- Pixels Per Unit：32。
+- 贴图过滤：Point。
+- 压缩：无压缩。
+- 关闭 Mip Maps。
 
-**地形（脚本生成的占位，32×32）—— 现在已不再使用**
-
-旧的瓦片地图系统已经换成整幅场景图，这四张图留着仅供以后做别的场景时复用：
-
-- `tile_grass` / `tile_rock` / `tile_water` / `tile_path`
-
-不需要的话可以直接删掉，删了不影响运行。
-
-**主角（从你的四向图切出来的，48×64）**
-
-- `hero_front` / `hero_right` / `hero_back` / `hero_left`
-
-切图流程记录一下，以后换素材可以照做：
-
-1. 源图必须是**真 RGBA**（有 alpha 通道）。如果拿到的是白底 24 位 RGB，就得先
-   「从图片边界 flood fill 白色区域」判定背景——不能按亮度阈值抠，
-   否则白 T 恤和肤色会被一起挖空。
-2. 用**预乘 alpha 的面积平均**下采样，反预乘输出，边缘不会混进白色变成白边。
-3. 四张统一放到 48×64 画布，水平居中、底部对齐——四块源图的高度要尽量一致
-   （现在这组误差 6px），否则切出来人物大小不一，转向时会忽大忽小。
-
-> **比例校验**：按图里汽车约 170px 长（真实约 4.5m）推算场景是 ~38px/m，
-> 一个 1.7m 的人 ≈ 64px——正好等于主角精灵的高度。所以主角 1:1 放进场景，
-> 和车、售货机、路灯的比例是协调的。如果换一张场景图，记得按同样的方法校验一遍，
-> 否则会「人比车大」或者「人比蚂蚁小」。
-
-正式美术覆盖同名文件即可，导入设置（Point 过滤 / 无压缩 / PPU 32）会自动套用。
+`Assets/Resources/Art/` 下的新贴图会自动应用像素导入设置，不需要逐张手动修改 Inspector。

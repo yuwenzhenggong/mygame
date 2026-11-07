@@ -100,6 +100,22 @@ namespace XianXia
             return "生命上限 " + (amount > 0 ? "+" + amount : amount.ToString());
         }
 
+        // ---------------- 资源 ----------------
+
+        public string CollectDrop(bool resonance, int amount)
+        {
+            if (amount <= 0) return null;
+
+            if (resonance)
+            {
+                State.resonanceCount += amount;
+                return "<color=#8ad7ff>获得异能残响 ×" + amount + "</color>";
+            }
+
+            State.breakthroughMaterials += amount;
+            return "<color=#ffd479>获得突破素材 ×" + amount + "</color>";
+        }
+
         public string LearnAbility(string id)
         {
             var def = Content.GetAbility(id);

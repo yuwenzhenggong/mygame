@@ -9,6 +9,7 @@ namespace XianXia.World
     {
         public EnemyDef Def;
         public int Hp;
+        public string SpawnId;   // 对应 enemies.json 里的刷怪点 id，用来记录已击杀
 
         public System.Action<Enemy> OnDeath;
 

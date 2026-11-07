@@ -25,6 +25,13 @@ namespace XianXia
         public List<string> abilities = new List<string>();          // 已获得的异能 id
         public List<string> usedInteractions = new List<string>();   // 已用过的一次性互动
 
+        // 资源
+        public int resonanceCount;          // 异能残响
+        public int breakthroughMaterials;   // 突破素材
+
+        // 已击杀的刷怪点 id（死亡后不再重复刷新，除非重开）
+        public List<string> deadEnemies = new List<string>();
+
         // 位置与场景（跨场景后要能回到原地）
         public string sceneId = "safehouse";
         public float playerX;

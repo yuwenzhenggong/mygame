@@ -26,6 +26,7 @@ namespace XianXia.UI
         RectTransform _hpBar;
         Image _hpFill;
         Text _hpText;
+        Text _lootText;
 
         RectTransform _hudRoot;
         bool _hudVisible;
@@ -54,6 +55,7 @@ namespace XianXia.UI
             if (_initialized) return;
             _initialized = true;
 
+            Instance = this;
             BuildUI();
             Content = ContentLibrary.Load();
 
@@ -177,6 +179,12 @@ namespace XianXia.UI
             _hpText = UIFactory.NewText("Text", bg.transform, "", UIFactory.SizeSmall,
                 new Color(1f, 1f, 1f, 0.95f), TextAnchor.MiddleCenter);
             UIFactory.Stretch(_hpText.rectTransform, 0f, 0f, 0f, 0f);
+
+            // 残响 / 素材计数（HUD 收起时也要看得到，不然打完怪不知道捡了什么）
+            _lootText = UIFactory.NewText("Loot", parent, "", UIFactory.SizeSmall,
+                new Color(0.85f, 0.9f, 1f, 0.95f), TextAnchor.MiddleLeft);
+            UIFactory.Anchor(_lootText.rectTransform, new Vector2(0f, 1f), new Vector2(0f, 1f),
+                new Vector2(12f, -44f), new Vector2(240f, -28f));
         }
 
         void Update()
@@ -195,6 +203,7 @@ namespace XianXia.UI
             if (_hudRoot != null) _hudRoot.gameObject.SetActive(_hudVisible);
             // HUD 打开时状态栏里已经有血量数字，常驻血条就先藏起来，免得重叠
             if (_hpBar != null) _hpBar.gameObject.SetActive(!_hudVisible);
+            if (_lootText != null) _lootText.gameObject.SetActive(!_hudVisible);
         }
 
         // 给战斗脚本调用：数值变了立刻刷新界面
@@ -465,6 +474,13 @@ namespace XianXia.UI
                 f.offsetMax = Vector2.zero;
 
                 _hpText.text = cur + " / " + max;
+            }
+
+            // 残响 / 素材计数
+            if (_lootText != null && Session != null)
+            {
+                _lootText.text = "<color=#8ad7ff>残响 ×" + Session.State.resonanceCount +
+                                 "</color>　<color=#ffd479>素材 ×" + Session.State.breakthroughMaterials + "</color>";
             }
 
             // 事件面板开着、或者人已经倒下 → 冻结走动和互动

@@ -434,7 +434,8 @@ public static class ProjectSetup
                                  "hero_attack_10", "hero_attack_11", "hero_attack_12", "hero_attack_13", "hero_attack_14",
                                  "hero_attack_15", "hero_attack_16", "hero_attack_17", "hero_attack_18", "hero_attack_19",
                                  "hero_attack_20",
-                                 "enemy_attacker", "enemy_beast", "enemy_elite", "px_white" };
+                                 "enemy_attacker", "enemy_beast", "enemy_elite", "px_white",
+                                 "drop_resonance", "drop_material" };
         int spriteOk = 0;
 
         foreach (var spriteName in spriteNames)

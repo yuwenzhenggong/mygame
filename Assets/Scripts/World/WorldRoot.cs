@@ -157,6 +157,11 @@ namespace XianXia.World
             {
                 if (spawn == null || spawn.scene != Scene.Id) continue;
 
+                // 已经打死的刷怪点不再刷出来
+                var session = UI.GameUI.Instance != null ? UI.GameUI.Instance.Session : null;
+                if (session != null && session.State.deadEnemies != null &&
+                    session.State.deadEnemies.Contains(spawn.id)) continue;
+
                 EnemyDef def = null;
                 foreach (var d in table.enemies)
                     if (d != null && d.id == spawn.enemy) { def = d; break; }
@@ -175,6 +180,7 @@ namespace XianXia.World
                 go.transform.position = new Vector3(world.x, world.y, 0f);
 
                 var enemy = go.AddComponent<Enemy>();
+                enemy.SpawnId = spawn.id;
                 enemy.Init(def, Scene, PlayerTransform, sprite, pxWhite);
                 enemy.OnDeath = OnEnemyDeath;
                 count++;
@@ -185,9 +191,56 @@ namespace XianXia.World
 
         void OnEnemyDeath(Enemy e)
         {
-            // 掉落与结算放 M3，这里先记录
-            if (e != null && e.Def != null)
-                Debug.Log("[World] 敌人死亡: " + e.Def.name);
+            if (e == null || e.Def == null) return;
+
+            var pos = e.transform.position;
+            var ui = UI.GameUI.Instance;
+            var session = ui != null ? ui.Session : null;
+
+            if (session != null)
+            {
+                // 记下这个刷怪点已清，重进场景不会复活
+                if (!string.IsNullOrEmpty(e.SpawnId) && session.State.deadEnemies != null &&
+                    !session.State.deadEnemies.Contains(e.SpawnId))
+                    session.State.deadEnemies.Add(e.SpawnId);
+
+                ui.AppendLog("<color=#9ef0a0>击败 " + e.Def.name + "</color>");
+
+                var expMsg = session.GainExp(e.Def.exp);
+                if (!string.IsNullOrEmpty(expMsg)) ui.AppendLog(expMsg);
+
+                ui.RefreshHud();
+            }
+
+            SpawnDrops(pos, false, e.Def.resonance);
+            SpawnDrops(pos, true, e.Def.materials);
+        }
+
+        // 掉落物稍微散开一点，避免几个东西叠在同一个像素上
+        void SpawnDrops(Vector3 pos, bool material, int count)
+        {
+            if (count <= 0) return;
+
+            var sprite = LoadSprite(material ? "drop_material" : "drop_resonance");
+            if (sprite == null) return;
+
+            for (int i = 0; i < count; i++)
+            {
+                var go = new GameObject(material ? "Drop_Material" : "Drop_Resonance");
+                go.transform.SetParent(_container.transform, false);
+
+                float ox = Random.Range(-0.4f, 0.4f);
+                float oy = Random.Range(-0.3f, 0.3f);
+                go.transform.position = pos + new Vector3(ox, oy, 0f);
+
+                var sr = go.AddComponent<SpriteRenderer>();
+                sr.sprite = sprite;
+                sr.sortingOrder = 8;
+
+                var drop = go.AddComponent<Drop>();
+                drop.Init(material ? Drop.DropKind.Material : Drop.DropKind.Resonance,
+                          1, PlayerTransform, Random.Range(0f, 6.28f));
+            }
         }
 
         void BuildInteractables()

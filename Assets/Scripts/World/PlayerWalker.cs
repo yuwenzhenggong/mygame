@@ -24,6 +24,9 @@ namespace XianXia.World
         // 向下跑动的帧时长。10 帧循环，0.06s/帧 → 0.6 秒一个循环
         public float WalkFrameDuration = 0.06f;
 
+        // 普通攻击序列帧时长。21 帧 × 0.025s ≈ 0.525 秒。
+        public float AttackFrameDuration = 0.025f;
+
         SceneData _scene;
         SpriteRenderer _body;
 
@@ -33,17 +36,28 @@ namespace XianXia.World
         // 向下的跑步动画帧（帧数不定，来自序列帧素材）；没有就退回静态站立图
         Sprite[] _walkDown = new Sprite[0];
 
+        // 普通攻击序列帧。攻击图是 120x120 画布，角色本体仍按 64px 高对齐。
+        Sprite[] _attackFrames = new Sprite[0];
+
         Facing _facing = Facing.Front;
         bool _walking;
         int _walkFrame;
         float _walkTimer;
 
+        bool _attacking;
+        int _attackFrame;
+        float _attackTimer;
+        bool _attackFaceLeft;
+
         // 角色的"面向"简化成左右两态：只由左右输入决定，上下走时保持上一次的左右。
         // 约定：朝左 = 用原始序列帧；朝右 = 水平翻转。所以默认朝左。
         bool _faceLeft = true;
 
+        const float IdleBodyY = 1f;
+
         public Facing CurrentFacing => _facing;
         public bool FaceLeft => _faceLeft;
+        public bool IsAttacking => _attacking;
 
         public void Init(SceneData scene)
         {
@@ -72,6 +86,32 @@ namespace XianXia.World
             ApplySprite();
         }
 
+        public void SetAttackFrames(Sprite[] frames)
+        {
+            var list = new System.Collections.Generic.List<Sprite>();
+            if (frames != null)
+            {
+                foreach (var f in frames)
+                    if (f != null) list.Add(f);
+            }
+            _attackFrames = list.ToArray();
+            _attackFrame = 0;
+            _attackTimer = 0f;
+            _attacking = false;
+        }
+
+        public void PlayAttack()
+        {
+            if (_attackFrames.Length == 0) return;
+
+            _attacking = true;
+            _attackFrame = 0;
+            _attackTimer = 0f;
+            // 出招期间锁住左右朝向，避免左右输入让整个刀光中途翻转。
+            _attackFaceLeft = _faceLeft;
+            ApplySprite();
+        }
+
         bool HasWalkDown => _walkDown.Length > 0;
 
         void Start()
@@ -83,6 +123,8 @@ namespace XianXia.World
         void Update()
         {
             if (_scene == null) return;
+
+            if (_attacking) AdvanceAttack(Time.deltaTime);
 
             if (GameFlow.IsBlocked)
             {
@@ -158,6 +200,30 @@ namespace XianXia.World
             ApplySprite();
         }
 
+        void AdvanceAttack(float dt)
+        {
+            if (!_attacking) return;
+
+            _attackTimer += dt;
+            float frameDuration = Mathf.Max(0.01f, AttackFrameDuration);
+            int frame = Mathf.FloorToInt(_attackTimer / frameDuration);
+
+            if (frame >= _attackFrames.Length)
+            {
+                _attacking = false;
+                _attackFrame = 0;
+                _attackTimer = 0f;
+                ApplySprite();
+                return;
+            }
+
+            if (frame != _attackFrame)
+            {
+                _attackFrame = frame;
+                ApplySprite();
+            }
+        }
+
         void SetIdle()
         {
             if (!_walking && _walkFrame == 0) return;
@@ -171,6 +237,21 @@ namespace XianXia.World
         {
             if (_body == null) _body = GetComponentInChildren<SpriteRenderer>();
             if (_body == null) return;
+
+            if (_attacking && _attackFrame >= 0 && _attackFrame < _attackFrames.Length)
+            {
+                var attackSprite = _attackFrames[_attackFrame];
+                if (attackSprite != null)
+                {
+                    _body.sprite = attackSprite;
+                    // 攻击画布更大，把 pivot 中心抬到画布高度的一半，
+                    // 让画布底边始终落在玩家脚下，不会因切图跳位。
+                    _body.transform.localPosition =
+                        new Vector3(0f, attackSprite.bounds.size.y * 0.5f, 0f);
+                    _body.flipX = !_attackFaceLeft;
+                    return;
+                }
+            }
 
             // 有序列帧时：所有方向共用同一套跑步帧，左右靠 flipX 表达
             bool useRun = _walkDown.Length > 0;
@@ -187,6 +268,7 @@ namespace XianXia.World
             }
 
             if (sprite != null) _body.sprite = sprite;
+            _body.transform.localPosition = new Vector3(0f, IdleBodyY, 0f);
             // 朝左用原图，朝右水平翻转
             _body.flipX = useRun && !_faceLeft;
         }

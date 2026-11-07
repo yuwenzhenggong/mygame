@@ -12,16 +12,38 @@ namespace XianXia.World
         public float Reach = 0.85f;     // 判定圆心离玩家多远
         public float Radius = 0.95f;    // 判定半径
         public float InvulnerableTime = 0.6f;
+        public float ImpactDelay = 0.25f; // 对齐攻击序列中刀光真正挥出的时刻
 
         float _cooldownLeft;
         float _invulnLeft;
         float _flashLeft = -1f;
+        float _pendingHitLeft = -1f;
         SpriteRenderer _body;
+        PlayerWalker _walker;
+        Facing _attackFacing;
         bool _dying;
 
         void Start()
         {
             _body = GetComponentInChildren<SpriteRenderer>();
+            _walker = GetComponent<PlayerWalker>();
+
+            // 普通攻击素材从 Resources 连号加载，缺帧就停，方便以后替换帧数。
+            var attackFrames = new System.Collections.Generic.List<Sprite>();
+            for (int i = 0; i < 64; i++)
+            {
+                var sprite = Resources.Load<Sprite>(
+                    PixelArtSettings.ArtResourceRoot + "hero_attack_" + i);
+                if (sprite == null) break;
+                attackFrames.Add(sprite);
+            }
+
+            if (_walker != null)
+            {
+                _walker.SetAttackFrames(attackFrames.ToArray());
+                if (attackFrames.Count == 0)
+                    Debug.LogWarning("[Combat] 没找到普通攻击帧 hero_attack_*");
+            }
         }
 
         void Update()
@@ -30,6 +52,16 @@ namespace XianXia.World
             if (GameFlow.IsBlocked) return;
 
             if (_cooldownLeft > 0f) _cooldownLeft -= Time.deltaTime;
+
+            if (_pendingHitLeft >= 0f)
+            {
+                _pendingHitLeft -= Time.deltaTime;
+                if (_pendingHitLeft <= 0f)
+                {
+                    _pendingHitLeft = -1f;
+                    ResolveHit();
+                }
+            }
 
             if (_invulnLeft > 0f)
             {
@@ -60,13 +92,20 @@ namespace XianXia.World
         {
             _cooldownLeft = Cooldown;
 
+            _attackFacing = _walker != null ? _walker.CurrentFacing : Facing.Front;
+            if (_walker != null) _walker.PlayAttack();
+
             // 出招的一点视觉反馈（偏冷，和挨打的红色区分开）
             SetTint(new Color(0.75f, 0.88f, 1f));
             _flashLeft = 0.08f;
 
-            var walker = GetComponent<PlayerWalker>();
-            var facing = walker != null ? walker.CurrentFacing : Facing.Front;
-            var center = (Vector2)transform.position + FacingDir(facing) * Reach;
+            // 等动画真正挥到有效帧时再结算，避免按 J 的瞬间敌人就掉血。
+            _pendingHitLeft = Mathf.Max(0f, ImpactDelay);
+        }
+
+        void ResolveHit()
+        {
+            var center = (Vector2)transform.position + FacingDir(_attackFacing) * Reach;
 
             var enemies = FindObjectsOfType<Enemy>();
             foreach (var e in enemies)

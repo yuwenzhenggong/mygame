@@ -51,6 +51,7 @@ namespace XianXia.World
         int _attackCount;    // 本段播放几帧
         float _attackTimer;
         bool _attackFaceLeft;
+        bool _attackInvertFlip;   // 这一段连招是否额外水平翻转（让每一下都朝同一侧）
 
         // 角色的"面向"简化成左右两态：只由左右输入决定，上下走时保持上一次的左右。
         // 约定：朝左 = 用原始序列帧；朝右 = 水平翻转。所以默认朝左。
@@ -103,7 +104,7 @@ namespace XianXia.World
             _attacking = false;
         }
 
-        public void PlayAttack(int start, int count)
+        public void PlayAttack(int start, int count, bool invertFlip = false)
         {
             if (_attackFrames.Length == 0 || count <= 0) return;
 
@@ -113,6 +114,7 @@ namespace XianXia.World
             _attacking = true;
             _attackStart = start;
             _attackCount = count;
+            _attackInvertFlip = invertFlip;
             _attackFrame = 0;
             _attackTimer = 0f;
             // 出招期间锁住左右朝向，避免左右输入让整段动画中途翻转。
@@ -257,7 +259,7 @@ namespace XianXia.World
                     // 让画布底边始终落在玩家脚下，不会因切图跳位。
                     _body.transform.localPosition =
                         new Vector3(0f, attackSprite.bounds.size.y * 0.5f, 0f);
-                    _body.flipX = !_attackFaceLeft;
+                    _body.flipX = (!_attackFaceLeft) ^ _attackInvertFlip;
                     return;
                 }
             }

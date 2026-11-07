@@ -20,6 +20,10 @@ namespace XianXia.World
         public float ComboWindow = 0.8f;     // 这段时间内再按 J 就接下一段
         public float LastHitDamageMul = 1.6f; // 最后一段（收招）的伤害倍率
 
+        // 素材里左手拳朝画面右、右手拳朝画面左。奇数次连招额外翻转，
+        // 让两段普攻都打在同一个方向上。
+        public bool FlipOddHits = true;
+
         float _cooldownLeft;
         float _invulnLeft;
         float _flashLeft = -1f;
@@ -113,7 +117,11 @@ namespace XianXia.World
             _cooldownLeft = CurrentCooldown();
 
             _attackFacing = _walker != null ? _walker.CurrentFacing : Facing.Front;
-            if (_walker != null) _walker.PlayAttack(start, FramesPerHit);
+            if (_walker != null)
+            {
+                bool invert = FlipOddHits && (hit % 2) == 1;
+                _walker.PlayAttack(start, FramesPerHit, invert);
+            }
 
             // 出招的一点视觉反馈（偏冷，和挨打的红色区分开）
             SetTint(new Color(0.75f, 0.88f, 1f));

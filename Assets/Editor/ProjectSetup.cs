@@ -442,11 +442,8 @@ public static class ProjectSetup
         string[] spriteNames = { "city_street", "safehouse", "jungle_arena", "hero_front", "hero_right", "hero_back", "hero_left", "marker",
                                  "hero_run_down_0", "hero_run_down_1", "hero_run_down_2", "hero_run_down_3", "hero_run_down_4",
                                  "hero_run_down_5", "hero_run_down_6", "hero_run_down_7", "hero_run_down_8", "hero_run_down_9",
-                                 "hero_attack_0", "hero_attack_1", "hero_attack_2", "hero_attack_3", "hero_attack_4",
-                                 "hero_attack_5", "hero_attack_6", "hero_attack_7", "hero_attack_8", "hero_attack_9",
-                                 "hero_attack_10", "hero_attack_11", "hero_attack_12", "hero_attack_13", "hero_attack_14",
-                                 "hero_attack_15", "hero_attack_16", "hero_attack_17", "hero_attack_18", "hero_attack_19",
-                                 "hero_attack_20",
+                                 "hero_combo_0", "hero_combo_1", "hero_combo_2",
+                                 "hero_combo_3", "hero_combo_4", "hero_combo_5",
                                  "enemy_attacker", "enemy_beast", "enemy_elite", "px_white",
                                  "drop_resonance", "drop_material" };
         int spriteOk = 0;

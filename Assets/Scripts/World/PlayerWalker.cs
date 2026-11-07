@@ -25,7 +25,8 @@ namespace XianXia.World
         public float WalkFrameDuration = 0.06f;
 
         // 普通攻击序列帧时长。21 帧 × 0.025s ≈ 0.525 秒。
-        public float AttackFrameDuration = 0.025f;
+        // 连招每帧时长。每段 3 帧 × 0.08s ≈ 0.24 秒，出手有分量但不拖沓
+        public float AttackFrameDuration = 0.08f;
 
         SceneData _scene;
         SpriteRenderer _body;
@@ -46,6 +47,8 @@ namespace XianXia.World
 
         bool _attacking;
         int _attackFrame;
+        int _attackStart;    // 本段连招在整组动画里的起始下标
+        int _attackCount;    // 本段播放几帧
         float _attackTimer;
         bool _attackFaceLeft;
 
@@ -100,14 +103,19 @@ namespace XianXia.World
             _attacking = false;
         }
 
-        public void PlayAttack()
+        public void PlayAttack(int start, int count)
         {
-            if (_attackFrames.Length == 0) return;
+            if (_attackFrames.Length == 0 || count <= 0) return;
+
+            start = Mathf.Clamp(start, 0, _attackFrames.Length - 1);
+            count = Mathf.Clamp(count, 1, _attackFrames.Length - start);
 
             _attacking = true;
+            _attackStart = start;
+            _attackCount = count;
             _attackFrame = 0;
             _attackTimer = 0f;
-            // 出招期间锁住左右朝向，避免左右输入让整个刀光中途翻转。
+            // 出招期间锁住左右朝向，避免左右输入让整段动画中途翻转。
             _attackFaceLeft = _faceLeft;
             ApplySprite();
         }
@@ -208,7 +216,7 @@ namespace XianXia.World
             float frameDuration = Mathf.Max(0.01f, AttackFrameDuration);
             int frame = Mathf.FloorToInt(_attackTimer / frameDuration);
 
-            if (frame >= _attackFrames.Length)
+            if (frame >= _attackCount)
             {
                 _attacking = false;
                 _attackFrame = 0;
@@ -238,9 +246,10 @@ namespace XianXia.World
             if (_body == null) _body = GetComponentInChildren<SpriteRenderer>();
             if (_body == null) return;
 
-            if (_attacking && _attackFrame >= 0 && _attackFrame < _attackFrames.Length)
+            int attackIndex = _attackStart + _attackFrame;
+            if (_attacking && attackIndex >= 0 && attackIndex < _attackFrames.Length)
             {
-                var attackSprite = _attackFrames[_attackFrame];
+                var attackSprite = _attackFrames[attackIndex];
                 if (attackSprite != null)
                 {
                     _body.sprite = attackSprite;

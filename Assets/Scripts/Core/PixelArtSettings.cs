@@ -16,5 +16,11 @@ namespace XianXia
         // 美术资源根目录：只有这个目录下的贴图会被自动套用像素导入设置
         public const string ArtRoot = "Assets/Resources/Art/";
         public const string ArtResourceRoot = "Art/";
+
+        // 角色整体放大倍数。精灵本身按 48x64 出图，乘以这个值后
+        // 主角在房间里的身高才能对上门的比例（门 148px，角色应约 96px）。
+        // 主角和敌人共用同一个倍数，否则主角会比怪高出一头。
+        // 取 1.5 是为了在 2 倍窗口下每个像素仍是整数倍放大，不会糊边。
+        public const float CharacterScale = 1.5f;
     }
 }

@@ -144,6 +144,8 @@ namespace XianXia.World
             var playerGo = new GameObject("Player");
             playerGo.transform.SetParent(_container.transform, false);
             playerGo.transform.position = new Vector3(spawn.x, spawn.y, 0f);
+            // Body 是子物体，缩放根节点会连身体偏移一起放大，脚底仍然落在 playerGo 的位置上
+            playerGo.transform.localScale = Vector3.one * PixelArtSettings.CharacterScale;
 
             // 精灵 48x64（PPU 32）→ 世界 1.5 x 2；pivot 在中心，所以身体抬 1.0 让脚底落在玩家坐标上
             var bodyGo = new GameObject("Body");
@@ -211,6 +213,7 @@ namespace XianXia.World
                 var go = new GameObject("Enemy_" + spawn.id);
                 go.transform.SetParent(_container.transform, false);
                 go.transform.position = new Vector3(world.x, world.y, 0f);
+                go.transform.localScale = Vector3.one * PixelArtSettings.CharacterScale;
 
                 var enemy = go.AddComponent<Enemy>();
                 enemy.SpawnId = spawn.id;

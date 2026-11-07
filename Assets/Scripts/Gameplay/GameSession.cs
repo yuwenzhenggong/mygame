@@ -41,7 +41,45 @@ namespace XianXia
             return sum;
         }
 
-        public int MaxHp => State.maxHp + AbilityMaxHpBonus();
+        public int MaxHp => State.maxHp + AbilityMaxHpBonus() + RealmMaxHpBonus();
+
+        // ---------------- 境界 ----------------
+
+        public RealmDef CurrentRealm
+        {
+            get
+            {
+                var list = Content.Realms;
+                if (list == null || list.Count == 0) return null;
+                return list[Mathf.Clamp(State.realmIndex, 0, list.Count - 1)];
+            }
+        }
+
+        public RealmDef NextRealm
+        {
+            get
+            {
+                var list = Content.Realms;
+                if (list == null) return null;
+                int i = State.realmIndex + 1;
+                return (i >= 0 && i < list.Count) ? list[i] : null;
+            }
+        }
+
+        public string RealmName => CurrentRealm != null ? CurrentRealm.name : "觉醒者";
+
+        int RealmMaxHpBonus()
+        {
+            var r = CurrentRealm;
+            return r != null ? r.maxHpBonus : 0;
+        }
+
+        int RealmDamageBonus()
+        {
+            var r = CurrentRealm;
+            return r != null ? r.damageBonus : 0;
+        }
+
 
         public bool HasAbility(string id)
         {
@@ -234,6 +272,22 @@ namespace XianXia
             return "「" + q.name + "」　未接取";
         }
 
+        public int GetKillCount(string enemyId)
+        {
+            if (string.IsNullOrEmpty(enemyId) || State.killCounts == null) return 0;
+            foreach (var k in State.killCounts)
+                if (k != null && k.enemyId == enemyId) return k.count;
+            return 0;
+        }
+
+        void AddKillCount(string enemyId)
+        {
+            if (State.killCounts == null) State.killCounts = new List<KillCount>();
+            foreach (var k in State.killCounts)
+                if (k != null && k.enemyId == enemyId) { k.count++; return; }
+            State.killCounts.Add(new KillCount { enemyId = enemyId, count = 1 });
+        }
+
         public string AcceptQuest()
         {
             var q = MainQuest;
@@ -243,18 +297,40 @@ namespace XianXia
             if (State.questState == "已完成") return "这单委托已经完成了。";
 
             State.questState = "进行中";
-            State.questKills = 0;
-            return "<color=#8ad7ff>接取委托「" + q.name + "」：</color>" + q.desc;
+
+            // 用历史击杀数回填进度：避免"先打完再接任务"导致委托永远做不完
+            State.questKills = Mathf.Min(GetKillCount(q.targetEnemy), q.targetCount);
+
+            var msg = "<color=#8ad7ff>接取委托「" + q.name + "」：</color>" + q.desc;
+
+            if (State.questKills >= q.targetCount)
+            {
+                State.questState = "已完成";
+                msg += "\n\n<color=#7ee787>你之前已经清剿过了，这单当场结了。</color>";
+                var expMsg = GainExp(q.rewardExp);
+                if (!string.IsNullOrEmpty(expMsg)) msg += "　" + expMsg;
+            }
+            else if (State.questKills > 0)
+            {
+                msg += "\n\n（你的击杀记录已计入：" + State.questKills + " / " + q.targetCount + "）";
+            }
+
+            return msg;
         }
 
         // 击杀上报；没进展就返回 null
         public string ReportKill(string enemyId)
         {
+            if (string.IsNullOrEmpty(enemyId)) return null;
+
+            // 不管任务接没接，都先记一份击杀数
+            AddKillCount(enemyId);
+
             var q = MainQuest;
             if (q == null || State.questState != "进行中") return null;
             if (enemyId != q.targetEnemy) return null;
 
-            State.questKills++;
+            State.questKills = Mathf.Min(GetKillCount(q.targetEnemy), q.targetCount);
             if (State.questKills < q.targetCount) return null;
 
             State.questState = "已完成";
@@ -320,7 +396,7 @@ namespace XianXia
 
         public int TotalDamageBonus()
         {
-            int sum = 0;
+            int sum = RealmDamageBonus();
             foreach (var id in State.abilities)
             {
                 var a = Content.GetAbility(id);
@@ -374,11 +450,38 @@ namespace XianXia
                    Mark(matOk) + " 突破素材　" + State.breakthroughMaterials + " / " + BreakthroughMaterialNeed;
         }
 
+        public bool CanBreakthrough()
+        {
+            bool allOk;
+            BreakthroughPanelText(out allOk);
+            return allOk && NextRealm != null;
+        }
+
+        // 真正的突破。返回给玩家看的文本；条件不足或已到顶就返回 null。
+        public string DoBreakthrough()
+        {
+            if (!CanBreakthrough()) return null;
+
+            var next = NextRealm;
+            State.realmIndex++;
+
+            // 上限涨多少，当前血量也补多少，别让突破看起来像被削了
+            State.hp += next.maxHpBonus;
+            ClampHp();
+
+            return "<color=#ffd479><b>突破成功</b></color>\n\n" +
+                   "你踏入了「<b>" + next.name + "</b>」。\n" +
+                   next.desc + "\n\n" +
+                   "<color=#7ee787>生命上限 +" + next.maxHpBonus +
+                   "　普攻伤害 +" + next.damageBonus + "</color>";
+        }
+
         // ---------------- 显示 ----------------
 
         public string StatusText()
         {
-            return "<b>" + State.playerName + "</b>　　Lv." + State.level +
+            return "<b>" + State.playerName + "</b>　　" +
+                   "<color=#ffd479>" + RealmName + "</color>　Lv." + State.level +
                    "　　<color=#8ab4ff>生命 " + State.hp + " / " + MaxHp + "</color>" +
                    "　　经验 " + State.exp + " / " + ExpToNext + "\n" +
                    "异能　" + AbilityNames();

@@ -47,6 +47,23 @@ namespace XianXia.Data
         public int rewardExp;
     }
 
+    // 境界
+    [Serializable]
+    public class RealmTable
+    {
+        public List<RealmDef> realms = new List<RealmDef>();
+    }
+
+    [Serializable]
+    public class RealmDef
+    {
+        public string id;
+        public string name;
+        public string desc;
+        public int maxHpBonus;
+        public int damageBonus;
+    }
+
     // 场景里可以互动的东西（售货机、长椅、地铁口……）
     [Serializable]
     public class InteractionTable

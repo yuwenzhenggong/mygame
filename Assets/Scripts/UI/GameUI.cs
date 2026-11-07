@@ -291,7 +291,7 @@ namespace XianXia.UI
         }
 
         // 把玩家当前所在场景和坐标写回存档数据
-        void CapturePosition()
+        public void CapturePosition()
         {
             var world = WorldRoot.Instance;
             if (world == null || world.Scene == null || world.PlayerTransform == null) return;
@@ -578,13 +578,53 @@ namespace XianXia.UI
 
         void OpenBreakthrough()
         {
+            var next = Session.NextRealm;
+            if (next == null)
+            {
+                ShowMessage("突破点", "你已经站在「" + Session.RealmName + "」。再往上的路还没修完。");
+                return;
+            }
+
             bool allOk;
             var body = Session.BreakthroughPanelText(out allOk);
-            body += allOk
-                ? "\n\n<color=#7ee787>三个条件都齐了。</color>"
-                : "\n\n<color=#ffa657>还差点火候。</color>";
+            body += "\n\n突破后：「<color=#ffd479>" + next.name + "</color>」　生命上限 +" +
+                    next.maxHpBonus + "　普攻伤害 +" + next.damageBonus;
 
-            ShowMessage("突破点", body);
+            if (!allOk)
+            {
+                body += "\n\n<color=#ffa657>还差点火候。出去多打几只，把残响和素材凑够。</color>";
+                ShowMessage("突破点", body);
+                return;
+            }
+
+            body += "\n\n<color=#7ee787>三个条件都齐了。</color>";
+
+            ShowChoices("突破点", body, new List<Choice>
+            {
+                new Choice { Label = "盘膝坐下，就此突破", OnClick = DoBreakthrough },
+                new Choice { Label = "再等等", OnClick = CloseEvent }
+            });
+        }
+
+        void DoBreakthrough()
+        {
+            var msg = Session.DoBreakthrough();
+            if (string.IsNullOrEmpty(msg)) { CloseEvent(); return; }
+
+            AppendLog("<color=#ffd479>突破：踏入「" + Session.RealmName + "」</color>");
+            Refresh();
+
+            // 突破即自动存档 —— 这一刻丢了才是真的难受
+            CapturePosition();
+            bool saved = SaveSystem.Save(Session.State);
+
+            var text = msg + "\n\n" +
+                       (saved ? "<color=#6ec1ff>已自动存档。</color>"
+                              : "<color=#ff6b6b>自动存档失败，看 Console。</color>") +
+                       "\n\n<color=#8ab4ff>Demo 的主线到这里结束。</color>\n" +
+                       "你还可以回林子里练手，按 ESC 打开面板存档退出。";
+
+            ShowResult("突破", text);
         }
 
         void ShowMessage(string title, string body)

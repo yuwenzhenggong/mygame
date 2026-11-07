@@ -153,10 +153,42 @@ public static class ProjectSetup
         }
 
         Debug.Log("[SelfCheck] 异能 " + content.Abilities.Count + " 个 / 互动点 " + content.Interactions.Count +
-                  " 个 / 事件 " + content.Events.Count + " 个");
+                  " 个 / 事件 " + content.Events.Count + " 个 / 任务 " + content.Quests.Count +
+                  " 个 / 境界 " + content.Realms.Count + " 个");
 
         if (content.Abilities.Count == 0) { Debug.LogError("[SelfCheck] 异能表为空"); failures++; }
         if (content.Interactions.Count == 0) { Debug.LogError("[SelfCheck] 互动点为空"); failures++; }
+
+        // 境界表：至少要有一档，且第一档不能有额外加成
+        if (content.Realms.Count == 0)
+        {
+            Debug.LogError("[SelfCheck] 境界表为空，突破会没有目标");
+            failures++;
+        }
+        else
+        {
+            var r0 = content.Realms[0];
+            if (r0.maxHpBonus != 0 || r0.damageBonus != 0)
+                Debug.LogWarning("[SelfCheck] 第一档境界带了加成，会让初始数值偏高: " + r0.name);
+
+            for (int i = 1; i < content.Realms.Count; i++)
+            {
+                var prev = content.Realms[i - 1];
+                var cur = content.Realms[i];
+                if (cur.maxHpBonus < prev.maxHpBonus || cur.damageBonus < prev.damageBonus)
+                {
+                    Debug.LogError("[SelfCheck] 境界「" + cur.name + "」的加成低于前一档「" + prev.name + "」，突破会变弱");
+                    failures++;
+                }
+            }
+        }
+
+        // 任务表：至少要有一条，具体的目标敌人校验放在敌人表加载之后
+        if (content.Quests.Count == 0)
+        {
+            Debug.LogError("[SelfCheck] 任务表为空，情报板会没有委托");
+            failures++;
+        }
 
         // 1) 互动点引用的东西必须存在
         var sceneIds = new System.Collections.Generic.List<string>();
@@ -312,6 +344,20 @@ public static class ProjectSetup
         toSave.abilities.Add("a_force");
         toSave.usedInteractions.Add("i_sign");
 
+        // 新增的进度字段也要能存住，漏一个就会导致"重进游戏进度倒退"
+        toSave.realmIndex = 1;
+        toSave.totalExp = 137;
+        toSave.resonanceCount = 4;
+        toSave.breakthroughMaterials = 3;
+        toSave.refineCount = 2;
+        toSave.questState = "已完成";
+        toSave.questKills = 2;
+        toSave.sceneId = "jungle";
+        toSave.playerX = 15.25f;
+        toSave.playerY = 8.125f;
+        toSave.deadEnemies.Add("s_attacker_1");
+        toSave.killCounts.Add(new XianXia.KillCount { enemyId = "attacker", count = 2 });
+
         if (!XianXia.SaveSystem.Save(toSave))
         {
             Debug.LogError("[SelfCheck] 存档失败");
@@ -329,6 +375,15 @@ public static class ProjectSetup
                      !loaded.HasFlag("foo") || loaded.abilities.Count != 1 || loaded.usedInteractions.Count != 1)
             {
                 Debug.LogError("[SelfCheck] 存档往返数据不一致: " + JsonUtility.ToJson(loaded));
+                failures++;
+            }
+            else if (loaded.realmIndex != 1 || loaded.totalExp != 137 ||
+                     loaded.resonanceCount != 4 || loaded.breakthroughMaterials != 3 ||
+                     loaded.refineCount != 2 || loaded.questState != "已完成" || loaded.questKills != 2 ||
+                     loaded.sceneId != "jungle" || loaded.deadEnemies.Count != 1 ||
+                     loaded.killCounts.Count != 1 || loaded.killCounts[0].count != 2)
+            {
+                Debug.LogError("[SelfCheck] 进度字段存档往返不一致: " + JsonUtility.ToJson(loaded));
                 failures++;
             }
             else
@@ -406,6 +461,22 @@ public static class ProjectSetup
         else
         {
             Debug.Log("[SelfCheck] 敌人种类 " + enemyTable.enemies.Count + "，刷新点 " + enemyTable.spawns.Count);
+
+            // 任务的目标敌人必须真的存在，否则委托永远做不完
+            foreach (var qd in content.Quests)
+            {
+                if (qd == null || string.IsNullOrEmpty(qd.targetEnemy)) continue;
+
+                bool found = false;
+                foreach (var d in enemyTable.enemies)
+                    if (d != null && d.id == qd.targetEnemy) { found = true; break; }
+
+                if (!found)
+                {
+                    Debug.LogError("[SelfCheck] 任务「" + qd.name + "」的目标敌人不存在: " + qd.targetEnemy);
+                    failures++;
+                }
+            }
 
             foreach (var spawn in enemyTable.spawns)
             {

@@ -1,0 +1,18 @@
+{
+  "realms": [
+    {
+      "id": "r_awaken",
+      "name": "觉醒者",
+      "desc": "刚睁开眼睛看见世界的另一层，还使不上什么力气。",
+      "maxHpBonus": 0,
+      "damageBonus": 0
+    },
+    {
+      "id": "r_core",
+      "name": "凝核者",
+      "desc": "把散在身体里的异能压成一枚核，力气终于跟得上了。",
+      "maxHpBonus": 20,
+      "damageBonus": 3
+    }
+  ]
+}

@@ -10,6 +10,7 @@ namespace XianXia
         public List<InteractionDef> Interactions = new List<InteractionDef>();
         public List<EventDef> Events = new List<EventDef>();
         public List<QuestDef> Quests = new List<QuestDef>();
+        public List<RealmDef> Realms = new List<RealmDef>();
 
         readonly Dictionary<string, AbilityDef> _abilityById = new Dictionary<string, AbilityDef>();
         readonly Dictionary<string, InteractionDef> _interactionById = new Dictionary<string, InteractionDef>();
@@ -30,6 +31,9 @@ namespace XianXia
 
             var questTable = DataLoader.Load<QuestTable>("Data/quests");
             if (questTable != null && questTable.quests != null) lib.Quests = questTable.quests;
+
+            var realmTable = DataLoader.Load<RealmTable>("Data/realms");
+            if (realmTable != null && realmTable.realms != null) lib.Realms = realmTable.realms;
 
             foreach (var a in lib.Abilities)
                 if (a != null && !string.IsNullOrEmpty(a.id)) lib._abilityById[a.id] = a;

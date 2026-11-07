@@ -10,6 +10,15 @@ namespace XianXia
         public int value;
     }
 
+    // 按敌人种类累计的击杀数。任务接取时用它回填进度，
+    // 否则"先打完再接任务"会因为敌人不重刷而永远做不完。
+    [Serializable]
+    public class KillCount
+    {
+        public string enemyId;
+        public int count;
+    }
+
     // 玩家存档的全部数据。只有这里的东西会被写进存档文件，所以想存什么就加到这儿。
     [Serializable]
     public class GameState
@@ -39,8 +48,14 @@ namespace XianXia
         // 炼化次数（突破条件之一）
         public int refineCount;
 
+        // 境界下标（0=觉醒者，1=凝核者）
+        public int realmIndex;
+
         // 已击杀的刷怪点 id（死亡后不再重复刷新，除非重开）
         public List<string> deadEnemies = new List<string>();
+
+        // 按敌人种类累计的击杀数（不依赖任务状态）
+        public List<KillCount> killCounts = new List<KillCount>();
 
         // 位置与场景（跨场景后要能回到原地）
         public string sceneId = "safehouse";

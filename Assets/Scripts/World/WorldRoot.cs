@@ -63,6 +63,11 @@ namespace XianXia.World
 
             if (_content == null) _content = ContentLibrary.Load();
 
+            // 换场景前把地上没捡的掉落物收进背包。
+            // 掉落物挂在 container 上会被一起销毁，不这么兜底的话
+            // "打完忘了捡就永远没了"，而敌人又不会重刷，会直接卡死进度。
+            CollectLooseDrops();
+
             if (_container != null) Destroy(_container);
             _container = new GameObject("Scene_" + data.Id);
             _container.transform.SetParent(transform, false);
@@ -83,6 +88,34 @@ namespace XianXia.World
             var target = SceneData.Load(sceneId);
             if (target == null) return;
             LoadScene(sceneId, target.ImageToWorld(imageX, imageY));
+
+            // 回到安全屋当作一个检查点：自动存一次，免得打了一路白打
+            if (sceneId != SafehouseSceneId) return;
+
+            var ui = UI.GameUI.Instance;
+            if (ui == null || ui.Session == null) return;
+
+            ui.CapturePosition();
+            if (SaveSystem.Save(ui.Session.State))
+                ui.AppendLog("<color=#6ec1ff>回到安全屋，已自动存档。</color>");
+        }
+
+        const string SafehouseSceneId = "safehouse";
+
+        // 把当前场景里还没被捡走的掉落物直接结算进背包
+        void CollectLooseDrops()
+        {
+            if (_container == null) return;
+
+            var ui = UI.GameUI.Instance;
+            if (ui == null || ui.Session == null) return;
+
+            foreach (var drop in _container.GetComponentsInChildren<Drop>(true))
+            {
+                if (drop == null) continue;
+                var msg = ui.Session.CollectDrop(drop.Kind == Drop.DropKind.Resonance, drop.Amount);
+                if (!string.IsNullOrEmpty(msg)) ui.AppendLog(msg);
+            }
         }
 
         void BuildBackdrop()

@@ -163,13 +163,29 @@ namespace XianXia.World
             var center = (Vector2)transform.position + FacingDir(_attackFacing) * Reach;
             int dmg = Mathf.RoundToInt(CurrentDamage() * Mathf.Max(0.01f, _pendingDamageMul));
 
+            int hitCount = 0;
             var enemies = FindObjectsOfType<Enemy>();
             foreach (var e in enemies)
             {
                 if (e == null) continue;
-                if (Vector2.Distance((Vector2)e.transform.position, center) <= Radius)
-                    e.TakeDamage(dmg);
+                if (Vector2.Distance((Vector2)e.transform.position, center) > Radius) continue;
+
+                e.TakeDamage(dmg);
+                DamageNumber.Spawn(
+                    e.transform.position + Vector3.up * (1.1f * PixelArtSettings.CharacterScale),
+                    dmg, new Color(1f, 0.92f, 0.55f), PixelArtSettings.CharacterScale);
+                hitCount++;
             }
+
+            // 一次攻击只顿一次，打中几只都算一下
+            if (hitCount > 0) Punch();
+        }
+
+        // 命中反馈：顿帧 + 震屏
+        void Punch()
+        {
+            HitStop.Freeze(0.045f);
+            if (CameraFollow.Instance != null) CameraFollow.Instance.Shake(0.10f, 0.12f);
         }
 
         public void TakeDamage(int amount)
@@ -187,6 +203,12 @@ namespace XianXia.World
             var msg = ui.Session.ChangeHp(-actual);
             ui.AppendLog("<color=#ff6b6b>受到 " + actual + " 点伤害</color>");
             ui.RefreshHud();
+
+            // 挨打也要有反馈，但震屏更重、不顿帧（顿帧会让挨打显得黏）
+            DamageNumber.Spawn(
+                transform.position + Vector3.up * (1.35f * PixelArtSettings.CharacterScale),
+                actual, new Color(1f, 0.38f, 0.38f), PixelArtSettings.CharacterScale);
+            if (CameraFollow.Instance != null) CameraFollow.Instance.Shake(0.14f, 0.16f);
 
             if (ui.Session.State.hp <= 0) Die();
         }

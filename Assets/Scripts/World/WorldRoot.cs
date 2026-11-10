@@ -20,6 +20,8 @@ namespace XianXia.World
         void Awake()
         {
             Instance = this;
+            // 顿帧组件挂在 WorldRoot 上，跨场景不会重建
+            if (GetComponent<HitStop>() == null) gameObject.AddComponent<HitStop>();
         }
 
         void OnDestroy()
@@ -188,12 +190,20 @@ namespace XianXia.World
             var pxWhite = LoadSprite("px_white");
             int count = 0;
 
+            var session = UI.GameUI.Instance != null ? UI.GameUI.Instance.Session : null;
+
+            // 进场景时让本场景的敌人复活，否则打完 4 只就永久空了，资源循环直接断掉。
+            // 想保留"打死就永久没了"的老行为，把 enemies.json 的 respawnOnEnter 改成 false。
+            if (table.respawnOnEnter && session != null && session.State.deadEnemies != null)
+                foreach (var spawn in table.spawns)
+                    if (spawn != null && spawn.scene == Scene.Id)
+                        session.State.deadEnemies.Remove(spawn.id);
+
             foreach (var spawn in table.spawns)
             {
                 if (spawn == null || spawn.scene != Scene.Id) continue;
 
                 // 已经打死的刷怪点不再刷出来
-                var session = UI.GameUI.Instance != null ? UI.GameUI.Instance.Session : null;
                 if (session != null && session.State.deadEnemies != null &&
                     session.State.deadEnemies.Contains(spawn.id)) continue;
 

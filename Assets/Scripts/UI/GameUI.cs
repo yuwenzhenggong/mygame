@@ -29,6 +29,9 @@ namespace XianXia.UI
         Text _lootText;
         Text _questText;
 
+        RectTransform _backpackPanel;
+        Text _backpackBody;
+
         RectTransform _hudRoot;
         bool _hudVisible;
 
@@ -154,6 +157,7 @@ namespace XianXia.UI
 
             BuildHpBar(canvasGo.transform);
             BuildEventPanel(canvasGo.transform);
+            BuildBackpackPanel(canvasGo.transform);
 
             // 默认收起：一进游戏就是干净的画面，只留互动提示和一条血条
             hud.gameObject.SetActive(false);
@@ -196,6 +200,20 @@ namespace XianXia.UI
 
         void Update()
         {
+            // 背包开着的时候，B / ESC 都用来关背包
+            if (_backpackPanel != null && _backpackPanel.gameObject.activeSelf)
+            {
+                if (Input.GetKeyDown(KeyCode.B) || Input.GetKeyDown(KeyCode.Escape)) CloseBackpack();
+                return;
+            }
+
+            if (Input.GetKeyDown(KeyCode.B))
+            {
+                if (_eventPanel != null && _eventPanel.gameObject.activeSelf) return;
+                OpenBackpack();
+                return;
+            }
+
             if (!Input.GetKeyDown(KeyCode.Escape)) return;
 
             // 事件弹窗开着的时候，ESC 不去动 HUD，免得把正在读的文本关掉
@@ -658,6 +676,81 @@ namespace XianXia.UI
             Refresh();
         }
 
+        // ---------------- 背包 ----------------
+
+        void BuildBackpackPanel(Transform canvasRoot)
+        {
+            var overlay = UIFactory.NewImage("BackpackOverlay", canvasRoot, new Color(0f, 0f, 0f, 0.72f));
+            UIFactory.Stretch(overlay.rectTransform, 0f, 0f, 0f, 0f);
+            _backpackPanel = overlay.rectTransform;
+
+            var inner = UIFactory.NewImage("BackpackBox", overlay.transform, new Color(0.09f, 0.11f, 0.14f, 0.99f));
+            var rt = inner.rectTransform;
+            rt.anchorMin = new Vector2(0.5f, 0.5f);
+            rt.anchorMax = new Vector2(0.5f, 0.5f);
+            rt.pivot = new Vector2(0.5f, 0.5f);
+            rt.sizeDelta = new Vector2(600f, 320f);
+            rt.anchoredPosition = Vector2.zero;
+
+            var title = UIFactory.NewText("Title", inner.transform, "背包", UIFactory.SizeTitle,
+                new Color(0.95f, 0.90f, 0.72f), TextAnchor.MiddleLeft);
+            UIFactory.Anchor(title.rectTransform, new Vector2(0f, 1f), new Vector2(1f, 1f),
+                new Vector2(20f, -46f), new Vector2(-20f, -12f));
+
+            _backpackBody = UIFactory.NewText("Body", inner.transform, "", UIFactory.SizeNormal,
+                new Color(0.85f, 0.88f, 0.92f), TextAnchor.UpperLeft);
+            UIFactory.Anchor(_backpackBody.rectTransform, new Vector2(0f, 0f), new Vector2(1f, 1f),
+                new Vector2(20f, 54f), new Vector2(-20f, -52f));
+
+            var btn = UIFactory.NewButton("Close", inner.transform, "关闭（B）", UIFactory.SizeNormal, CloseBackpack);
+            UIFactory.Anchor(btn.GetComponent<RectTransform>(), new Vector2(0.5f, 0f), new Vector2(0.5f, 0f),
+                new Vector2(-80f, 12f), new Vector2(80f, 46f));
+
+            _backpackPanel.gameObject.SetActive(false);
+        }
+
+        public void OpenBackpack()
+        {
+            if (_backpackPanel == null || Session == null) return;
+
+            var sb = new System.Text.StringBuilder();
+            var st = Session.State;
+
+            sb.AppendLine("<color=#ffd479>资源</color>");
+            sb.AppendLine("　异能残响　×" + st.resonanceCount);
+            sb.AppendLine("　突破素材　×" + st.breakthroughMaterials);
+            sb.AppendLine();
+
+            sb.AppendLine("<color=#ffd479>异能</color>　" + st.abilities.Count + " / " + Content.Abilities.Count);
+            foreach (var a in Content.Abilities)
+            {
+                if (a == null) continue;
+                if (st.abilities.Contains(a.id))
+                    sb.AppendLine("　<color=#8ab4ff>" + a.name + "</color>　" + a.desc);
+                else if (a.refinable)
+                    sb.AppendLine("　<color=#666f7a>？？　未炼化</color>");
+            }
+            sb.AppendLine();
+
+            sb.AppendLine("<color=#ffd479>状态</color>");
+            sb.AppendLine("　境界　" + Session.RealmName + "　等级 " + Session.Level +
+                          "　经验 " + st.exp + " / " + Session.ExpToNext);
+            sb.AppendLine("　累计经验 " + st.totalExp + " / " + GameSession.BreakthroughExpNeed +
+                          "　炼化 " + st.refineCount + " 次");
+            sb.AppendLine("　" + Session.QuestProgressText());
+
+            _backpackBody.text = sb.ToString();
+            _backpackPanel.gameObject.SetActive(true);
+            Refresh();
+        }
+
+        public void CloseBackpack()
+        {
+            if (_backpackPanel == null) return;
+            _backpackPanel.gameObject.SetActive(false);
+            Refresh();
+        }
+
         // ---------------- 对外 ----------------
 
         public void SetPrompt(string text)
@@ -703,8 +796,9 @@ namespace XianXia.UI
             // 任务追踪
             if (_questText != null && Session != null) _questText.text = Session.QuestProgressText();
 
-            // 事件面板开着、或者人已经倒下 → 冻结走动和互动
-            bool modalOpen = _eventPanel != null && _eventPanel.gameObject.activeSelf;
+            // 事件面板 / 背包开着 → 冻结走动和互动
+            bool modalOpen = (_eventPanel != null && _eventPanel.gameObject.activeSelf)
+                          || (_backpackPanel != null && _backpackPanel.gameObject.activeSelf);
             GameFlow.IsBlocked = modalOpen || (Session != null && Session.IsDead);
         }
     }

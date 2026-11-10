@@ -8,6 +8,10 @@ namespace XianXia.Data
     {
         public List<EnemyDef> enemies = new List<EnemyDef>();
         public List<EnemySpawnDef> spawns = new List<EnemySpawnDef>();
+
+        // true = 每次进入场景，本场景的敌人全部复活（默认）
+        // false = 打死的永久不再刷
+        public bool respawnOnEnter = true;
     }
 
     [Serializable]

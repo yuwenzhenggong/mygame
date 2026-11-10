@@ -516,7 +516,9 @@ public static class ProjectSetup
                                  "hero_combo_0", "hero_combo_1", "hero_combo_2",
                                  "hero_combo_3", "hero_combo_4", "hero_combo_5",
                                  "enemy_attacker", "enemy_beast", "enemy_elite", "px_white",
-                                 "drop_resonance", "drop_material" };
+                                 "drop_resonance", "drop_material",
+                                 "num_0", "num_1", "num_2", "num_3", "num_4",
+                                 "num_5", "num_6", "num_7", "num_8", "num_9" };
         int spriteOk = 0;
 
         foreach (var spriteName in spriteNames)

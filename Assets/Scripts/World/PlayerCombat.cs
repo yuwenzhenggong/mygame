@@ -137,25 +137,49 @@ namespace XianXia.World
         }
 
         // 伤害 / 冷却 / 减伤都受已炼化的异能影响
+        // 伤害 / 冷却 / 减伤都受已炼化的异能和主动 buff 影响
+        AbilityCaster _caster;
+        AbilityCaster Caster
+        {
+            get
+            {
+                if (_caster == null) _caster = GetComponent<AbilityCaster>();
+                return _caster;
+            }
+        }
+
         int CurrentDamage()
         {
+            var caster = Caster;
+            int bonus = (caster != null && caster.HasBuff) ? Mathf.RoundToInt(caster.BonusDamage) : 0;
+
             var ui = GameUI.Instance;
-            if (ui == null || ui.Session == null) return Damage;
-            return Damage + ui.Session.TotalDamageBonus();
+            if (ui == null || ui.Session == null) return Damage + bonus;
+            return Damage + bonus + ui.Session.TotalDamageBonus();
         }
 
         float CurrentCooldown()
         {
+            var caster = Caster;
+            float mul = (caster != null && caster.HasBuff) ? caster.CooldownMul : 1f;
+            mul = Mathf.Clamp(mul, 0.2f, 1f);
+
             var ui = GameUI.Instance;
-            if (ui == null || ui.Session == null) return Cooldown;
-            return Cooldown * (1f - ui.Session.TotalCooldownReduction());
+            if (ui == null || ui.Session == null) return Cooldown * mul;
+            return Cooldown * (1f - ui.Session.TotalCooldownReduction()) * mul;
         }
 
         int ReduceIncoming(int amount)
         {
+            var caster = Caster;
+            float mul = (caster != null && caster.HasBuff) ? caster.DamageTakenMul : 1f;
+            mul = Mathf.Clamp01(mul);
+
             var ui = GameUI.Instance;
-            if (ui == null || ui.Session == null) return amount;
-            return Mathf.Max(1, Mathf.RoundToInt(amount * (1f - ui.Session.TotalDamageReduction())));
+            if (ui == null || ui.Session == null) return Mathf.Max(0, Mathf.RoundToInt(amount * mul));
+
+            // 预判期间 mul = 0，可以做到完全免疫
+            return Mathf.Max(0, Mathf.RoundToInt(amount * (1f - ui.Session.TotalDamageReduction()) * mul));
         }
 
         void ResolveHit()
@@ -200,7 +224,16 @@ namespace XianXia.World
             _flashLeft = -1f;
 
             int actual = ReduceIncoming(amount);
-            var msg = ui.Session.ChangeHp(-actual);
+
+            // 预判期间伤害归零，走"免疫"分支，别显示"受到 0 点伤害"
+            if (actual <= 0)
+            {
+                ui.AppendLog("<color=#8ad7ff>免疫了这次伤害。</color>");
+                ui.RefreshHud();
+                return;
+            }
+
+            ui.Session.ChangeHp(-actual);
             ui.AppendLog("<color=#ff6b6b>受到 " + actual + " 点伤害</color>");
             ui.RefreshHud();
 

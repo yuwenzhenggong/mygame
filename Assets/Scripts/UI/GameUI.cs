@@ -689,7 +689,7 @@ namespace XianXia.UI
             rt.anchorMin = new Vector2(0.5f, 0.5f);
             rt.anchorMax = new Vector2(0.5f, 0.5f);
             rt.pivot = new Vector2(0.5f, 0.5f);
-            rt.sizeDelta = new Vector2(600f, 320f);
+            rt.sizeDelta = new Vector2(620f, 336f);
             rt.anchoredPosition = Vector2.zero;
 
             var title = UIFactory.NewText("Title", inner.transform, "背包", UIFactory.SizeTitle,
@@ -716,28 +716,45 @@ namespace XianXia.UI
             var sb = new System.Text.StringBuilder();
             var st = Session.State;
 
-            sb.AppendLine("<color=#ffd479>资源</color>");
-            sb.AppendLine("　异能残响　×" + st.resonanceCount);
-            sb.AppendLine("　突破素材　×" + st.breakthroughMaterials);
+            var caster = (WorldRoot.Instance != null && WorldRoot.Instance.PlayerTransform != null)
+                ? WorldRoot.Instance.PlayerTransform.GetComponent<XianXia.World.AbilityCaster>()
+                : null;
+
+            sb.AppendLine("<color=#ffd479>资源</color>　残响 ×" + st.resonanceCount +
+                          "　素材 ×" + st.breakthroughMaterials);
+            sb.AppendLine("<color=#ffd479>境界</color>　" + Session.RealmName + "　Lv." + Session.Level +
+                          "　经验 " + st.exp + " / " + Session.ExpToNext +
+                          "　累计 " + st.totalExp + " / " + GameSession.BreakthroughExpNeed);
+            sb.AppendLine("<color=#ffd479>委托</color>　" + Session.QuestProgressText());
             sb.AppendLine();
 
-            sb.AppendLine("<color=#ffd479>异能</color>　" + st.abilities.Count + " / " + Content.Abilities.Count);
-            foreach (var a in Content.Abilities)
+            sb.AppendLine("<color=#ffd479>异能</color>　" + st.abilities.Count + " / " + Content.Abilities.Count +
+                          "　<color=#8a8f98>（数字键 1~7 释放）</color>");
+
+            for (int i = 0; i < Content.Abilities.Count; i++)
             {
+                var a = Content.Abilities[i];
                 if (a == null) continue;
-                if (st.abilities.Contains(a.id))
-                    sb.AppendLine("　<color=#8ab4ff>" + a.name + "</color>　" + a.desc);
-                else if (a.refinable)
-                    sb.AppendLine("　<color=#666f7a>？？　未炼化</color>");
-            }
-            sb.AppendLine();
 
-            sb.AppendLine("<color=#ffd479>状态</color>");
-            sb.AppendLine("　境界　" + Session.RealmName + "　等级 " + Session.Level +
-                          "　经验 " + st.exp + " / " + Session.ExpToNext);
-            sb.AppendLine("　累计经验 " + st.totalExp + " / " + GameSession.BreakthroughExpNeed +
-                          "　炼化 " + st.refineCount + " 次");
-            sb.AppendLine("　" + Session.QuestProgressText());
+                if (!st.abilities.Contains(a.id))
+                {
+                    if (a.refinable) sb.AppendLine("　" + (i + 1) + ". <color=#666f7a>？？　未炼化</color>");
+                    continue;
+                }
+
+                var line = "　" + (i + 1) + ". <color=#8ab4ff>" + a.name + "</color>";
+
+                if (!a.active)
+                    line += "　" + a.desc;
+                else
+                {
+                    if (caster != null && caster.CooldownLeft(i) > 0f)
+                        line += "　<color=#ffa657>冷却 " + Mathf.CeilToInt(caster.CooldownLeft(i)) + "s</color>";
+                    if (!string.IsNullOrEmpty(a.activeDesc)) line += "　" + a.activeDesc;
+                }
+
+                sb.AppendLine(line);
+            }
 
             _backpackBody.text = sb.ToString();
             _backpackPanel.gameObject.SetActive(true);

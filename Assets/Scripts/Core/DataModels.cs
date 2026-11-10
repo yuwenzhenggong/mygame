@@ -27,6 +27,24 @@ namespace XianXia.Data
         public float cooldownReduction;    // 普攻冷却缩短（0~1）
 
         public bool refinable;             // true = 只能从炼化台获得
+
+        // ---------------- 主动释放（数字键 1~7） ----------------
+        public bool active;                    // false = 没有主动效果，按了没反应
+        public float activeCooldown = 8f;      // 冷却秒数
+        public float activeDuration;           // >0 = 持续型 buff，0 = 瞬发
+
+        public int activeBurstDamage;          // 瞬发：范围伤害
+        public float activeBurstRadius = 3f;
+        public float activeBurstKnockback;
+
+        public int activeHeal;                 // 瞬发：回血
+
+        public float activeDamageAdd;          // buff：普攻额外伤害
+        public float activeDamageTakenMul = 1f;// buff：受到伤害倍率（0.4 = 只剩 40%）
+        public float activeCooldownMul = 1f;   // buff：普攻冷却倍率（0.5 = 攻速翻倍）
+        public bool activeReveal;              // buff：敌人显形
+
+        public string activeDesc;              // 给背包显示的一句话
     }
 
     // 任务

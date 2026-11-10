@@ -21,7 +21,30 @@ namespace XianXia.World
 
         float _attackTimer;
         float _flashTimer = -1f;
+        float _revealLeft;
         bool _dead;
+
+        // 灵视显形：持续时间内给个偏冷的高亮
+        public void Highlight(float seconds)
+        {
+            if (seconds > _revealLeft) _revealLeft = seconds;
+        }
+
+        // 被击退：逐轴推进并检查遮挡，避免推进墙里
+        public void Push(Vector3 delta)
+        {
+            if (_dead || _scene == null) return;
+
+            var cur = (Vector2)transform.position;
+            var want = cur + (Vector2)delta;
+
+            if (!_scene.IsSolidAt(new Vector2(want.x, cur.y)))
+                transform.position = new Vector3(want.x, cur.y, transform.position.z);
+
+            cur = (Vector2)transform.position;
+            if (!_scene.IsSolidAt(new Vector2(cur.x, want.y)))
+                transform.position = new Vector3(cur.x, want.y, transform.position.z);
+        }
 
         const float BarWidth = 0.9f;
         const float BarHeight = 0.1f;
@@ -96,7 +119,15 @@ namespace XianXia.World
             if (_flashTimer > 0f)
             {
                 _flashTimer -= Time.deltaTime;
-                if (_flashTimer <= 0f && _body != null) _body.color = Color.white;
+                if (_flashTimer <= 0f && _body != null && _revealLeft <= 0f) _body.color = Color.white;
+            }
+
+            // 灵视显形：没在闪红的时候给个偏冷的高亮
+            if (_revealLeft > 0f)
+            {
+                _revealLeft -= Time.deltaTime;
+                if (_body != null && _flashTimer <= 0f)
+                    _body.color = _revealLeft > 0f ? new Color(0.72f, 0.95f, 1f, 1f) : Color.white;
             }
 
             // 事件面板开着时，敌人也停手

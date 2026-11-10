@@ -177,6 +177,7 @@ namespace XianXia.World
             if (runFrames.Count == 0) Debug.LogWarning("[World] 没找到跑步帧 hero_run_down_*");
 
             playerGo.AddComponent<PlayerCombat>();
+            playerGo.AddComponent<AbilityCaster>();
 
             PlayerTransform = playerGo.transform;
         }

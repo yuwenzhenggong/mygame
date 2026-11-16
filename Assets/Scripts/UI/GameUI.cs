@@ -252,36 +252,86 @@ namespace XianXia.UI
             UIFactory.Stretch(overlay.rectTransform, 0f, 0f, 0f, 0f);
             _eventPanel = overlay.rectTransform;
 
-            var inner = UIFactory.NewImage("EventBox", overlay.transform, new Color(0.09f, 0.11f, 0.14f, 0.99f));
-            var rt = inner.rectTransform;
-            rt.anchorMin = new Vector2(0.5f, 0.5f);
-            rt.anchorMax = new Vector2(0.5f, 0.5f);
-            rt.pivot = new Vector2(0.5f, 0.5f);
-            rt.sizeDelta = new Vector2(560f, 300f);
-            rt.anchoredPosition = Vector2.zero;
+            // ---------- 对话框底板：四层描边，比例按素材包 SVG（1760x312）缩到 640x360 基准 ----------
+            Transform boxInner;
+            var box = UIFactory.NewLayeredBox("DialogBox", overlay.transform,
+                new Color[] { UIFactory.DlgDark, UIFactory.DlgCream, UIFactory.DlgTan, UIFactory.DlgCream },
+                new float[] { 0f, 2f, 5f, 6f },
+                out boxInner);
 
-            _eventTitle = UIFactory.NewText("Title", inner.transform, "", UIFactory.SizeTitle,
-                new Color(0.95f, 0.90f, 0.72f), TextAnchor.MiddleLeft);
-            UIFactory.Anchor(_eventTitle.rectTransform, new Vector2(0f, 1f), new Vector2(1f, 1f),
-                new Vector2(20f, -46f), new Vector2(-20f, -12f));
+            var boxRt = box.rectTransform;
+            boxRt.anchorMin = new Vector2(0.5f, 0f);
+            boxRt.anchorMax = new Vector2(0.5f, 0f);
+            boxRt.pivot = new Vector2(0.5f, 0f);
+            boxRt.sizeDelta = new Vector2(620f, 180f);
+            boxRt.anchoredPosition = new Vector2(0f, 10f);
 
-            _eventBody = UIFactory.NewText("Body", inner.transform, "", UIFactory.SizeNormal,
-                new Color(0.85f, 0.88f, 0.92f), TextAnchor.UpperLeft);
-            UIFactory.Anchor(_eventBody.rectTransform, new Vector2(0f, 1f), new Vector2(1f, 1f),
-                new Vector2(20f, -170f), new Vector2(-20f, -52f));
+            // ---------- 姓名牌：骑在底板上沿，带一根金色竖条 ----------
+            Transform plateInner;
+            var plate = UIFactory.NewLayeredBox("NamePlate", box.transform,
+                new Color[] { UIFactory.DlgDark }, new float[] { 0f }, out plateInner);
 
-            var options = UIFactory.NewRect("Options", inner.transform);
+            var plateRt = plate.rectTransform;
+            plateRt.anchorMin = new Vector2(0f, 1f);
+            plateRt.anchorMax = new Vector2(0f, 1f);
+            plateRt.pivot = new Vector2(0f, 0f);
+            plateRt.sizeDelta = new Vector2(104f, 22f);
+            plateRt.anchoredPosition = new Vector2(26f, -2f);
+
+            var accent = UIFactory.NewImage("Accent", plate.transform, UIFactory.DlgGold);
+            accent.raycastTarget = false;
+            UIFactory.Anchor(accent.rectTransform, new Vector2(0f, 0.5f), new Vector2(0f, 0.5f),
+                new Vector2(6f, -6f), new Vector2(8f, 6f));
+
+            _eventTitle = UIFactory.NewText("Title", plate.transform, "", UIFactory.SizeNormal,
+                UIFactory.DlgCream, TextAnchor.MiddleLeft);
+            UIFactory.Anchor(_eventTitle.rectTransform, new Vector2(0f, 0f), new Vector2(1f, 1f),
+                new Vector2(14f, 0f), new Vector2(-6f, 0f));
+
+            // ---------- 头像框 + 真实头像 ----------
+            Transform frameInner;
+            var frame = UIFactory.NewLayeredBox("PortraitFrame", box.transform,
+                new Color[] { UIFactory.DlgDark, UIFactory.DlgTan, UIFactory.DlgInner },
+                new float[] { 0f, 3f, 4f }, out frameInner);
+
+            var frameRt = frame.rectTransform;
+            frameRt.anchorMin = new Vector2(0f, 0f);
+            frameRt.anchorMax = new Vector2(0f, 0f);
+            frameRt.pivot = new Vector2(0f, 0f);
+            frameRt.sizeDelta = new Vector2(72f, 72f);
+            frameRt.anchoredPosition = new Vector2(16f, 92f);
+
+            var portrait = UIFactory.NewSpriteImage("Portrait", frameInner, "ui_portrait_hero", Color.white);
+            portrait.raycastTarget = false;
+            portrait.preserveAspect = true;
+            UIFactory.Stretch(portrait.rectTransform, 2f, 2f, 2f, 2f);
+
+            // ---------- 正文 ----------
+            _eventBody = UIFactory.NewText("Body", box.transform, "", UIFactory.SizeNormal,
+                UIFactory.DlgDark, TextAnchor.UpperLeft);
+            UIFactory.Anchor(_eventBody.rectTransform, new Vector2(0f, 0f), new Vector2(1f, 1f),
+                new Vector2(100f, 62f), new Vector2(-16f, -14f));
+
+            // ---------- 分隔线 ----------
+            var line = UIFactory.NewImage("Divider", box.transform,
+                new Color(UIFactory.DlgTan.r, UIFactory.DlgTan.g, UIFactory.DlgTan.b, 0.55f));
+            line.raycastTarget = false;
+            UIFactory.Anchor(line.rectTransform, new Vector2(0f, 0f), new Vector2(1f, 0f),
+                new Vector2(100f, 54f), new Vector2(-16f, 55f));
+
+            // ---------- 选项条：横向一排，和素材包的按钮行一致 ----------
+            var options = UIFactory.NewRect("Options", box.transform);
             UIFactory.Anchor(options, new Vector2(0f, 0f), new Vector2(1f, 0f),
-                new Vector2(20f, 16f), new Vector2(-20f, 164f));
+                new Vector2(16f, 10f), new Vector2(-16f, 50f));
             _eventOptions = options;
 
-            var vlg = options.gameObject.AddComponent<VerticalLayoutGroup>();
-            vlg.spacing = 6f;
-            vlg.childAlignment = TextAnchor.UpperCenter;
-            vlg.childControlWidth = true;
-            vlg.childControlHeight = true;
-            vlg.childForceExpandWidth = true;
-            vlg.childForceExpandHeight = false;
+            var hlg = options.gameObject.AddComponent<HorizontalLayoutGroup>();
+            hlg.spacing = 8f;
+            hlg.childAlignment = TextAnchor.MiddleCenter;
+            hlg.childControlWidth = true;
+            hlg.childControlHeight = true;
+            hlg.childForceExpandWidth = false;
+            hlg.childForceExpandHeight = true;
 
             _eventPanel.gameObject.SetActive(false);
         }
@@ -384,19 +434,19 @@ namespace XianXia.UI
             foreach (var opt in opts)
             {
                 var captured = opt;
-                var btn = UIFactory.NewButton("Option", _eventOptions, captured.text, UIFactory.SizeNormal,
+                var btn = UIFactory.NewDialogButton("Option", _eventOptions, captured.text, UIFactory.SizeNormal,
                     () => OnChoose(ev, captured));
                 var le = btn.gameObject.AddComponent<LayoutElement>();
-                le.minHeight = 34f;
-                le.preferredHeight = 34f;
+                le.minWidth = 140f;
+                le.preferredWidth = 140f;
             }
 
             if (opts.Count == 0)
             {
-                var btn = UIFactory.NewButton("Option", _eventOptions, "离开", UIFactory.SizeNormal, CloseEvent);
+                var btn = UIFactory.NewDialogButton("Option", _eventOptions, "离开", UIFactory.SizeNormal, CloseEvent);
                 var le = btn.gameObject.AddComponent<LayoutElement>();
-                le.minHeight = 34f;
-                le.preferredHeight = 34f;
+                le.minWidth = 140f;
+                le.preferredWidth = 140f;
             }
 
             Refresh();
@@ -665,11 +715,11 @@ namespace XianXia.UI
                 foreach (var c in choices)
                 {
                     var captured = c;
-                    var btn = UIFactory.NewButton("Option", _eventOptions, captured.Label, UIFactory.SizeNormal,
+                    var btn = UIFactory.NewDialogButton("Option", _eventOptions, captured.Label, UIFactory.SizeNormal,
                         () => { if (captured.OnClick != null) captured.OnClick(); });
                     var le = btn.gameObject.AddComponent<LayoutElement>();
-                    le.minHeight = 32f;
-                    le.preferredHeight = 32f;
+                    le.minWidth = 140f;
+                    le.preferredWidth = 140f;
                 }
             }
 

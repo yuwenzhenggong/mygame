@@ -131,6 +131,70 @@ namespace XianXia.UI
             return t;
         }
 
+        // ---------------- 暖白像素对话框 ----------------
+        // 配色与描边层次取自 UI 素材包里的组件 SVG，在 UGUI 里用嵌套矩形还原，
+        // 这样任意尺寸都是硬边，不依赖 SVG 插件，也不会被缩放糊掉。
+
+        public static readonly Color DlgDark  = new Color32(0x29, 0x26, 0x2e, 0xff);
+        public static readonly Color DlgCream = new Color32(0xfc, 0xf8, 0xee, 0xff);
+        public static readonly Color DlgTan   = new Color32(0xbf, 0xb4, 0xa3, 0xff);
+        public static readonly Color DlgGold  = new Color32(0xb4, 0xa2, 0x7d, 0xff);
+        public static readonly Color DlgInner = new Color32(0xe9, 0xe3, 0xd8, 0xff);
+
+        // 按 colors/insets 依次向内铺色，还原「外框 → 米白 → 细线 → 内芯」的层次。
+        // 返回最外层 Image，innerMost 是最里层的 Transform，用来放内容。
+        public static Image NewLayeredBox(string name, Transform parent, Color[] colors, float[] insets,
+                                          out Transform innerMost)
+        {
+            Image root = null;
+            Transform cur = parent;
+
+            for (int i = 0; i < colors.Length; i++)
+            {
+                var img = NewImage(name + "_" + i, cur, colors[i]);
+                img.raycastTarget = false;
+
+                if (i == 0) root = img;
+                else Stretch(img.rectTransform, insets[i], insets[i], insets[i], insets[i]);
+
+                cur = img.transform;
+            }
+
+            innerMost = cur;
+            return root;
+        }
+
+        // 跟着素材包做的米白按钮：细棕边 + 米白底 + 深色字
+        public static Button NewDialogButton(string name, Transform parent, string label, int size,
+                                             UnityEngine.Events.UnityAction onClick)
+        {
+            Transform inner;
+            var root = NewLayeredBox(name, parent,
+                new Color[] { DlgTan, DlgCream },
+                new float[] { 0f, 2f },
+                out inner);
+
+            var img = inner.GetComponent<Image>();
+            if (img != null) img.raycastTarget = true;
+
+            var btn = root.gameObject.AddComponent<Button>();
+            btn.targetGraphic = img;
+
+            var colors = btn.colors;
+            colors.normalColor = Color.white;
+            colors.highlightedColor = new Color(0.88f, 0.85f, 0.78f, 1f);
+            colors.pressedColor = new Color(0.74f, 0.70f, 0.62f, 1f);
+            colors.selectedColor = Color.white;
+            colors.fadeDuration = 0.04f;
+            btn.colors = colors;
+
+            var txt = NewText("Label", inner, label, size, DlgDark, TextAnchor.MiddleCenter);
+            Stretch(txt.rectTransform, 4f, 2f, 4f, 2f);
+
+            if (onClick != null) btn.onClick.AddListener(onClick);
+            return btn;
+        }
+
         public static Button NewButton(string name, Transform parent, string label, int size, UnityEngine.Events.UnityAction onClick)
         {
             var img = NewImage(name, parent, new Color(0.16f, 0.21f, 0.29f, 1f));

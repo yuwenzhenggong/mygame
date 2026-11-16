@@ -518,7 +518,8 @@ public static class ProjectSetup
                                  "enemy_attacker", "enemy_beast", "enemy_elite", "px_white",
                                  "drop_resonance", "drop_material",
                                  "num_0", "num_1", "num_2", "num_3", "num_4",
-                                 "num_5", "num_6", "num_7", "num_8", "num_9" };
+                                 "num_5", "num_6", "num_7", "num_8", "num_9",
+                                 "ui_portrait_hero" };
         int spriteOk = 0;
 
         foreach (var spriteName in spriteNames)

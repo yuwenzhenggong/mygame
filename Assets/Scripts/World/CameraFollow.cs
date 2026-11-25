@@ -9,6 +9,9 @@ namespace XianXia.World
     {
         public static CameraFollow Instance;
 
+        // 给 UI 用：算「地图实际渲染区域」时要读正交尺寸和宽高比
+        public Camera Cam { get { return _cam; } }
+
         Transform _target;
         SceneData _scene;
         Camera _cam;

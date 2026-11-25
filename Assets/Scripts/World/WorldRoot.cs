@@ -11,6 +11,9 @@ namespace XianXia.World
         public static WorldRoot Instance { get; private set; }
 
         public SceneData Scene { get; private set; }
+
+        // 本场景配置了多少个刷怪点：>0 说明是战斗地图
+        public int SceneEnemySpawns { get; private set; }
         public Transform PlayerTransform { get; private set; }
 
         ContentLibrary _content;
@@ -185,8 +188,15 @@ namespace XianXia.World
         // 敌人按 enemies.json 的 spawns 摆，只摆当前场景的
         void BuildEnemies()
         {
+            SceneEnemySpawns = 0;
+
             var table = DataLoader.Load<EnemyTable>("Data/enemies");
             if (table == null || table.spawns == null) return;
+
+            // 先记下本场景一共配了几个刷怪点，用来判断"这是不是战斗地图"。
+            // 注意不能事后数活着的敌人——全打死了也不该把状态栏收起来。
+            foreach (var s in table.spawns)
+                if (s != null && s.scene == Scene.Id) SceneEnemySpawns++;
 
             var pxWhite = LoadSprite("px_white");
             int count = 0;

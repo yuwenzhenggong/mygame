@@ -26,6 +26,7 @@ namespace XianXia.UI
         RectTransform _statusRoot;
         RectTransform _gameArea;
         CanvasScaler _canvasScaler;
+        float _infoTop = -1f;
         int _lastScreenW;
         int _lastScreenH;
         Image _hpFill;
@@ -293,10 +294,66 @@ namespace XianXia.UI
 
             if (!Mathf.Approximately(_canvasScaler.scaleFactor, scale))
                 _canvasScaler.scaleFactor = scale;
+        }
 
-            // GameArea 永远是地图的 640x360，窗口怎么变都不动
-            if (_gameArea != null)
-                _gameArea.sizeDelta = new Vector2(PixelArtSettings.ReferenceWidth, PixelArtSettings.ReferenceHeight);
+        void LateUpdate()
+        {
+            UpdateGameArea();
+            UpdateStatusBarVisibility();
+        }
+
+        // GameArea 跟着「地图实际渲染出来的那块区域」走：
+        //   场景比视野大（街道 / 丛林）→ 铺满整个画面，HUD 就在屏幕左上角
+        //   场景比视野小（安全屋）    → 居中一小块，HUD 跟着缩到这块里
+        void UpdateGameArea()
+        {
+            if (_gameArea == null || _canvasScaler == null) return;
+
+            var world = WorldRoot.Instance;
+            if (world == null || world.Scene == null) return;
+
+            var follow = CameraFollow.Instance;
+            var cam = follow != null ? follow.Cam : null;
+            if (cam == null || !cam.orthographic) return;
+
+            float visH = cam.orthographicSize * 2f;
+            float visW = visH * cam.aspect;
+            if (visW < 0.001f || visH < 0.001f) return;
+
+            float fracW = Mathf.Clamp01(world.Scene.WorldWidth / visW);
+            float fracH = Mathf.Clamp01(world.Scene.WorldHeight / visH);
+
+            float s = Mathf.Max(1f, _canvasScaler.scaleFactor);
+            var size = new Vector2(Screen.width / s * fracW, Screen.height / s * fracH);
+
+            if ((_gameArea.sizeDelta - size).sqrMagnitude > 0.01f)
+                _gameArea.sizeDelta = size;
+        }
+
+        // 状态栏只在战斗地图（有刷怪点的场景）显示；ESC 面板打开时也让位
+        void UpdateStatusBarVisibility()
+        {
+            var world = WorldRoot.Instance;
+            bool isBattle = world != null && world.SceneEnemySpawns > 0;
+            bool showBar = isBattle && !_hudVisible;
+
+            if (_statusRoot != null && _statusRoot.gameObject.activeSelf != showBar)
+                _statusRoot.gameObject.SetActive(showBar);
+
+            if (_infoLine != null)
+            {
+                if (_infoLine.gameObject.activeSelf == _hudVisible)
+                    _infoLine.gameObject.SetActive(!_hudVisible);
+
+                // 没有状态栏时，信息行顶到最上面，不留空档
+                float top = showBar ? (6f + BarH + 3f) : 6f;
+                if (!Mathf.Approximately(_infoTop, top))
+                {
+                    _infoTop = top;
+                    UIFactory.Anchor(_infoLine.rectTransform, new Vector2(0f, 1f), new Vector2(0f, 1f),
+                        new Vector2(8f, -top - 14f), new Vector2(430f, -top));
+                }
+            }
         }
 
         void Update()
@@ -334,9 +391,7 @@ namespace XianXia.UI
         {
             _hudVisible = !_hudVisible;
             if (_hudRoot != null) _hudRoot.gameObject.SetActive(_hudVisible);
-            // HUD 打开时状态面板里已经有完整数值，常驻状态栏先藏起来，免得和它重叠
-            if (_statusRoot != null) _statusRoot.gameObject.SetActive(!_hudVisible);
-            if (_infoLine != null) _infoLine.gameObject.SetActive(!_hudVisible);
+            // 状态栏和信息行的显隐由 UpdateStatusBarVisibility 每帧统一处理
         }
 
         // 给战斗脚本调用：数值变了立刻刷新界面

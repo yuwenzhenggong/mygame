@@ -23,11 +23,13 @@ namespace XianXia.UI
         Text _logText;
         Text _promptText;
 
-        RectTransform _hpBar;
+        RectTransform _statusRoot;
         Image _hpFill;
-        Text _hpText;
-        Text _lootText;
-        Text _questText;
+        Image _expFill;
+        Text _infoLine;
+        readonly Image[] _skillIcons = new Image[7];
+        readonly Text[] _skillCds = new Text[7];
+        readonly bool[] _skillIconLoaded = new bool[7];
 
         RectTransform _backpackPanel;
         Text _backpackBody;
@@ -155,7 +157,7 @@ namespace XianXia.UI
             AddBarButton(bar, "读档", OnLoad);
             AddBarButton(bar, "重开", OnRestart);
 
-            BuildHpBar(canvasGo.transform);
+            BuildStatusBar(canvasGo.transform);
             BuildEventPanel(canvasGo.transform);
             BuildBackpackPanel(canvasGo.transform);
 
@@ -164,38 +166,90 @@ namespace XianXia.UI
             _hudVisible = false;
         }
 
-        // HUD 收起时也常驻的血条——战斗中看不到血量等于没法打
-        void BuildHpBar(Transform parent)
-        {
-            var bg = UIFactory.NewImage("HpBar", parent, new Color(0.05f, 0.05f, 0.07f, 0.82f));
-            bg.raycastTarget = false;
-            UIFactory.Anchor(bg.rectTransform, new Vector2(0f, 1f), new Vector2(0f, 1f),
-                new Vector2(12f, -26f), new Vector2(152f, -12f));
-            _hpBar = bg.rectTransform;
+        // ---------------- 人物状态栏 ----------------
+        // 素材原图的内容区尺寸，用来把子元素位置按比例换算到面板内
+        const float BarSrcW = 1404f;
+        const float BarSrcH = 647f;
+        const float BarW = 280f;
+        const float BarH = 129f;
 
-            _hpFill = UIFactory.NewImage("Fill", bg.transform, new Color(0.85f, 0.26f, 0.26f, 1f));
-            _hpFill.raycastTarget = false;
-            var f = _hpFill.rectTransform;
+        // 7 个技能格在原图里的横坐标和宽度
+        static readonly float[] SlotX = { 46f, 244f, 438f, 623f, 816f, 1008f, 1191f };
+        static readonly float[] SlotW = { 180f, 178f, 168f, 175f, 176f, 167f, 170f };
+
+        static float BX(float x) { return x / BarSrcW * BarW; }
+        static float BY(float y) { return y / BarSrcH * BarH; }
+
+        // 在父节点里按「左上角为原点、向下为正」摆放
+        static void PlaceTL(RectTransform rt, float x, float y, float w, float h)
+        {
+            rt.anchorMin = new Vector2(0f, 1f);
+            rt.anchorMax = new Vector2(0f, 1f);
+            rt.pivot = new Vector2(0f, 1f);
+            rt.anchoredPosition = new Vector2(x, -y);
+            rt.sizeDelta = new Vector2(w, h);
+        }
+
+        void BuildStatusBar(Transform parent)
+        {
+            var root = UIFactory.NewRect("StatusBar", parent);
+            PlaceTL(root, 6f, 6f, BarW, BarH);
+            _statusRoot = root;
+
+            var bg = UIFactory.NewSpriteImage("Bg", root, "ui_statusbar", Color.white);
+            bg.raycastTarget = false;
+            UIFactory.Stretch(bg.rectTransform, 0f, 0f, 0f, 0f);
+
+            // 头像（放在素材自带的头像框里）
+            var portrait = UIFactory.NewSpriteImage("Portrait", root, "ui_portrait_hero", Color.white);
+            portrait.raycastTarget = false;
+            portrait.preserveAspect = true;
+            PlaceTL(portrait.rectTransform, BX(45f), BY(26f), BX(327f), BY(354f));
+
+            // 生命条 / 经验条（条太窄，数值不放在条里，交给 ESC 面板和背包）
+            _hpFill = MakeTrack(root, "HpTrack", 521f, 209f, 788f, 74f, new Color(0.80f, 0.20f, 0.22f, 1f));
+            _expFill = MakeTrack(root, "ExpTrack", 647f, 324f, 660f, 44f, new Color(0.32f, 0.62f, 1f, 1f));
+
+            // 7 个技能格：图标 + 冷却倒计时
+            for (int i = 0; i < 7; i++)
+            {
+                var slot = UIFactory.NewRect("Skill" + i, root);
+                PlaceTL(slot, BX(SlotX[i]), BY(425f), BX(SlotW[i]), BY(180f));
+
+                var icon = UIFactory.NewSpriteImage("Icon", slot, "ui_skill_a_sight", Color.white);
+                icon.raycastTarget = false;
+                icon.preserveAspect = true;
+                UIFactory.Stretch(icon.rectTransform, 3f, 3f, 3f, 3f);
+                _skillIcons[i] = icon;
+
+                var cd = UIFactory.NewText("Cd", slot, "", UIFactory.SizeSmall,
+                    new Color(1f, 0.95f, 0.7f, 1f), TextAnchor.MiddleCenter);
+                UIFactory.Stretch(cd.rectTransform, 0f, 0f, 0f, 0f);
+                _skillCds[i] = cd;
+            }
+
+            // 面板下面的一行：资源 + 任务进度
+            _infoLine = UIFactory.NewText("Info", parent, "", UIFactory.SizeSmall,
+                new Color(0.92f, 0.94f, 1f, 0.95f), TextAnchor.MiddleLeft);
+            UIFactory.Anchor(_infoLine.rectTransform, new Vector2(0f, 1f), new Vector2(0f, 1f),
+                new Vector2(8f, -6f - BarH - 17f), new Vector2(430f, -6f - BarH - 3f));
+        }
+
+        // 进度条：底板是素材里的深色凹槽，填充条按比例拉伸
+        Image MakeTrack(Transform parent, string name, float rx, float ry, float rw, float rh, Color color)
+        {
+            var track = UIFactory.NewRect(name, parent);
+            PlaceTL(track, BX(rx), BY(ry), BX(rw), BY(rh));
+
+            var fill = UIFactory.NewImage("Fill", track, color);
+            fill.raycastTarget = false;
+            var f = fill.rectTransform;
             f.anchorMin = Vector2.zero;
             f.anchorMax = Vector2.one;
-            f.offsetMin = Vector2.zero;
-            f.offsetMax = Vector2.zero;
+            f.offsetMin = new Vector2(1f, 1f);
+            f.offsetMax = new Vector2(-1f, -1f);
 
-            _hpText = UIFactory.NewText("Text", bg.transform, "", UIFactory.SizeSmall,
-                new Color(1f, 1f, 1f, 0.95f), TextAnchor.MiddleCenter);
-            UIFactory.Stretch(_hpText.rectTransform, 0f, 0f, 0f, 0f);
-
-            // 残响 / 素材计数（HUD 收起时也要看得到，不然打完怪不知道捡了什么）
-            _lootText = UIFactory.NewText("Loot", parent, "", UIFactory.SizeSmall,
-                new Color(0.85f, 0.9f, 1f, 0.95f), TextAnchor.MiddleLeft);
-            UIFactory.Anchor(_lootText.rectTransform, new Vector2(0f, 1f), new Vector2(0f, 1f),
-                new Vector2(12f, -44f), new Vector2(240f, -28f));
-
-            // 任务追踪
-            _questText = UIFactory.NewText("Quest", parent, "", UIFactory.SizeSmall,
-                new Color(0.95f, 0.88f, 0.62f, 0.95f), TextAnchor.MiddleLeft);
-            UIFactory.Anchor(_questText.rectTransform, new Vector2(0f, 1f), new Vector2(0f, 1f),
-                new Vector2(12f, -62f), new Vector2(300f, -46f));
+            return fill;
         }
 
         void Update()
@@ -226,10 +280,9 @@ namespace XianXia.UI
         {
             _hudVisible = !_hudVisible;
             if (_hudRoot != null) _hudRoot.gameObject.SetActive(_hudVisible);
-            // HUD 打开时状态栏里已经有血量数字，常驻血条就先藏起来，免得重叠
-            if (_hpBar != null) _hpBar.gameObject.SetActive(!_hudVisible);
-            if (_lootText != null) _lootText.gameObject.SetActive(!_hudVisible);
-            if (_questText != null) _questText.gameObject.SetActive(!_hudVisible);
+            // HUD 打开时状态面板里已经有完整数值，常驻状态栏先藏起来，免得和它重叠
+            if (_statusRoot != null) _statusRoot.gameObject.SetActive(!_hudVisible);
+            if (_infoLine != null) _infoLine.gameObject.SetActive(!_hudVisible);
         }
 
         // 给战斗脚本调用：数值变了立刻刷新界面
@@ -867,36 +920,74 @@ namespace XianXia.UI
             if (_statusText != null && Session != null) _statusText.text = Session.StatusText();
             if (_logText != null) _logText.text = string.Join("\n", _log.ToArray());
 
-            // 常驻血条
-            if (_hpFill != null && _hpText != null && Session != null)
-            {
-                int cur = Mathf.Max(0, Session.State.hp);
-                int max = Mathf.Max(1, Session.MaxHp);
-                float ratio = Mathf.Clamp01(cur / (float)max);
-
-                var f = _hpFill.rectTransform;
-                f.anchorMin = new Vector2(0f, 0f);
-                f.anchorMax = new Vector2(ratio, 1f);
-                f.offsetMin = Vector2.zero;
-                f.offsetMax = Vector2.zero;
-
-                _hpText.text = cur + " / " + max;
-            }
-
-            // 残响 / 素材计数
-            if (_lootText != null && Session != null)
-            {
-                _lootText.text = "<color=#8ad7ff>残响 ×" + Session.State.resonanceCount +
-                                 "</color>　<color=#ffd479>素材 ×" + Session.State.breakthroughMaterials + "</color>";
-            }
-
-            // 任务追踪
-            if (_questText != null && Session != null) _questText.text = Session.QuestProgressText();
+            RefreshStatusBar();
 
             // 事件面板 / 背包开着 → 冻结走动和互动
             bool modalOpen = (_eventPanel != null && _eventPanel.gameObject.activeSelf)
                           || (_backpackPanel != null && _backpackPanel.gameObject.activeSelf);
             GameFlow.IsBlocked = modalOpen || (Session != null && Session.IsDead);
+        }
+
+        static void SetFill(Image fill, float ratio)
+        {
+            var f = fill.rectTransform;
+            f.anchorMin = new Vector2(0f, 0f);
+            f.anchorMax = new Vector2(Mathf.Clamp01(ratio), 1f);
+            f.offsetMin = new Vector2(1f, 1f);
+            f.offsetMax = new Vector2(-1f, -1f);
+        }
+
+        void RefreshStatusBar()
+        {
+            if (Session == null) return;
+
+            // 生命
+            int hp = Mathf.Max(0, Session.State.hp);
+            int maxHp = Mathf.Max(1, Session.MaxHp);
+            if (_hpFill != null) SetFill(_hpFill, hp / (float)maxHp);
+
+            // 经验
+            int exp = Mathf.Max(0, Session.State.exp);
+            int expNeed = Mathf.Max(1, Session.ExpToNext);
+            if (_expFill != null) SetFill(_expFill, exp / (float)expNeed);
+
+            // 7 个技能格：有异能就亮，否则压暗；冷却中显示剩余秒数
+            var caster = (WorldRoot.Instance != null && WorldRoot.Instance.PlayerTransform != null)
+                ? WorldRoot.Instance.PlayerTransform.GetComponent<XianXia.World.AbilityCaster>()
+                : null;
+
+            var abilities = Content != null ? Content.Abilities : null;
+
+            for (int i = 0; i < 7; i++)
+            {
+                var def = (abilities != null && i < abilities.Count) ? abilities[i] : null;
+                bool owned = def != null && Session.HasAbility(def.id);
+
+                if (_skillIcons[i] != null)
+                {
+                    if (def != null && !_skillIconLoaded[i])
+                    {
+                        var sprite = Resources.Load<Sprite>(PixelArtSettings.ArtResourceRoot + "ui_skill_" + def.id);
+                        if (sprite != null) { _skillIcons[i].sprite = sprite; _skillIconLoaded[i] = true; }
+                    }
+                    _skillIcons[i].color = owned ? Color.white : new Color(1f, 1f, 1f, 0.16f);
+                }
+
+                if (_skillCds[i] != null)
+                {
+                    float cd = (caster != null && owned) ? caster.CooldownLeft(i) : 0f;
+                    _skillCds[i].text = cd > 0.05f ? Mathf.CeilToInt(cd).ToString() : "";
+                }
+            }
+
+            // 面板下方一行
+            if (_infoLine != null)
+            {
+                var st = Session.State;
+                _infoLine.text = "<color=#8ad7ff>残响 " + st.resonanceCount + "</color>　" +
+                                 "<color=#ffd479>素材 " + st.breakthroughMaterials + "</color>　｜　" +
+                                 Session.QuestProgressText();
+            }
         }
     }
 }

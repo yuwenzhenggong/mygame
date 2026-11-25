@@ -30,6 +30,7 @@ namespace XianXia.UI
         readonly Image[] _skillIcons = new Image[7];
         readonly Text[] _skillCds = new Text[7];
         readonly bool[] _skillIconLoaded = new bool[7];
+        readonly bool[] _skillIconTried = new bool[7];
 
         RectTransform _backpackPanel;
         Text _backpackBody;
@@ -216,7 +217,8 @@ namespace XianXia.UI
                 var slot = UIFactory.NewRect("Skill" + i, root);
                 PlaceTL(slot, BX(SlotX[i]), BY(425f), BX(SlotW[i]), BY(180f));
 
-                var icon = UIFactory.NewSpriteImage("Icon", slot, "ui_skill_a_sight", Color.white);
+                // 先建成全透明：没有图标素材的技能就保持空着，露出素材本身的空槽
+                var icon = UIFactory.NewImage("Icon", slot, new Color(1f, 1f, 1f, 0f));
                 icon.raycastTarget = false;
                 icon.preserveAspect = true;
                 UIFactory.Stretch(icon.rectTransform, 3f, 3f, 3f, 3f);
@@ -965,12 +967,18 @@ namespace XianXia.UI
 
                 if (_skillIcons[i] != null)
                 {
-                    if (def != null && !_skillIconLoaded[i])
+                    if (def != null && !_skillIconTried[i])
                     {
                         var sprite = Resources.Load<Sprite>(PixelArtSettings.ArtResourceRoot + "ui_skill_" + def.id);
                         if (sprite != null) { _skillIcons[i].sprite = sprite; _skillIconLoaded[i] = true; }
+                        _skillIconTried[i] = true;   // 找不到就只试一次，别每帧 Load
                     }
-                    _skillIcons[i].color = owned ? Color.white : new Color(1f, 1f, 1f, 0.16f);
+
+                    // 没有素材的技能保持空槽：透明，不画占位
+                    if (!_skillIconLoaded[i])
+                        _skillIcons[i].color = new Color(1f, 1f, 1f, 0f);
+                    else
+                        _skillIcons[i].color = owned ? Color.white : new Color(1f, 1f, 1f, 0.16f);
                 }
 
                 if (_skillCds[i] != null)

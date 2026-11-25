@@ -169,14 +169,14 @@ namespace XianXia.UI
 
         // ---------------- 人物状态栏 ----------------
         // 素材原图的内容区尺寸，用来把子元素位置按比例换算到面板内
-        const float BarSrcW = 1404f;
-        const float BarSrcH = 647f;
+        const float BarSrcW = 1396f;
+        const float BarSrcH = 659f;
         const float BarW = 280f;
-        const float BarH = 129f;
+        const float BarH = 132f;
 
-        // 7 个技能格在原图里的横坐标和宽度
-        static readonly float[] SlotX = { 46f, 244f, 438f, 623f, 816f, 1008f, 1191f };
-        static readonly float[] SlotW = { 180f, 178f, 168f, 175f, 176f, 167f, 170f };
+        // 7 个技能格在原图里的横坐标和宽度（相对内容区左上角）
+        static readonly float[] SlotX = { 49f, 241f, 432f, 621f, 810f, 999f, 1187f };
+        static readonly float[] SlotW = { 177f, 176f, 174f, 174f, 174f, 172f, 171f };
 
         static float BX(float x) { return x / BarSrcW * BarW; }
         static float BY(float y) { return y / BarSrcH * BarH; }
@@ -201,21 +201,28 @@ namespace XianXia.UI
             bg.raycastTarget = false;
             UIFactory.Stretch(bg.rectTransform, 0f, 0f, 0f, 0f);
 
-            // 头像（放在素材自带的头像框里）
-            var portrait = UIFactory.NewSpriteImage("Portrait", root, "ui_portrait_hero", Color.white);
+            // 头像：用一张圆角遮罩裁切，否则方形头像的直角会盖住素材框的圆角
+            var maskImg = UIFactory.NewSpriteImage("PortraitMask", root, "ui_portrait_mask", Color.white);
+            maskImg.raycastTarget = false;
+            PlaceTL(maskImg.rectTransform, BX(42f), BY(27f), BX(331f), BY(352f));
+
+            var mask = maskImg.gameObject.AddComponent<Mask>();
+            mask.showMaskGraphic = false;
+
+            var portrait = UIFactory.NewSpriteImage("Portrait", maskImg.transform, "ui_portrait_hero", Color.white);
             portrait.raycastTarget = false;
             portrait.preserveAspect = true;
-            PlaceTL(portrait.rectTransform, BX(45f), BY(26f), BX(327f), BY(354f));
+            UIFactory.Stretch(portrait.rectTransform, 0f, 0f, 0f, 0f);
 
             // 生命条 / 经验条（条太窄，数值不放在条里，交给 ESC 面板和背包）
-            _hpFill = MakeTrack(root, "HpTrack", 521f, 209f, 788f, 74f, new Color(0.80f, 0.20f, 0.22f, 1f));
-            _expFill = MakeTrack(root, "ExpTrack", 647f, 324f, 660f, 44f, new Color(0.32f, 0.62f, 1f, 1f));
+            _hpFill = MakeTrack(root, "HpTrack", 523f, 205f, 783f, 69f, new Color(0.86f, 0.24f, 0.28f, 1f));
+            _expFill = MakeTrack(root, "ExpTrack", 645f, 314f, 660f, 50f, new Color(0.28f, 0.72f, 0.95f, 1f));
 
             // 7 个技能格：图标 + 冷却倒计时
             for (int i = 0; i < 7; i++)
             {
                 var slot = UIFactory.NewRect("Skill" + i, root);
-                PlaceTL(slot, BX(SlotX[i]), BY(425f), BX(SlotW[i]), BY(180f));
+                PlaceTL(slot, BX(SlotX[i]), BY(433f), BX(SlotW[i]), BY(180f));
 
                 // 先建成全透明：没有图标素材的技能就保持空着，露出素材本身的空槽
                 var icon = UIFactory.NewImage("Icon", slot, new Color(1f, 1f, 1f, 0f));

@@ -519,7 +519,7 @@ public static class ProjectSetup
                                  "drop_resonance", "drop_material",
                                  "num_0", "num_1", "num_2", "num_3", "num_4",
                                  "num_5", "num_6", "num_7", "num_8", "num_9",
-                                 "ui_portrait_hero", "ui_statusbar",
+                                 "ui_portrait_hero", "ui_portrait_mask", "ui_statusbar",
                                  "ui_skill_a_force", "ui_skill_a_heal", "ui_skill_a_burn" };
         int spriteOk = 0;
 

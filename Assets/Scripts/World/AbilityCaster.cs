@@ -95,7 +95,7 @@ namespace XianXia.World
 
                     var push = e.transform.position - transform.position;
                     if (push.sqrMagnitude < 0.0001f) push = Vector3.right;
-                    e.Push(push.normalized * def.activeBurstKnockback);
+                    e.ApplyKnockback(push, def.activeBurstKnockback);
 
                     DamageNumber.Spawn(
                         e.transform.position + Vector3.up * (1.1f * PixelArtSettings.CharacterScale),

@@ -29,6 +29,9 @@ namespace XianXia.Data
         public int exp = 10;
         public int resonance = 1;          // 掉几个残响
         public int materials = 0;          // 掉几个突破素材
+
+        // 击退度：0 = 一打就飞，1 = 纹丝不动。越厉害的怪给得越高。
+        public float knockbackResist;
     }
 
     [Serializable]

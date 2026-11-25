@@ -12,7 +12,12 @@ namespace XianXia.World
         public float Reach = 0.85f;     // 判定圆心离玩家多远
         public float Radius = 0.95f;    // 判定半径
         public float InvulnerableTime = 0.6f;
-        public float ImpactDelay = 0.12f; // 对齐动画里拳头真正打出的时刻
+        public float Knockback = 0.9f;    // 普攻的基础击退距离（世界单位，再乘以敌人的抗性）
+
+        // 命中时机：这套 5 帧素材里，第 1 段是「站姿→蓄力→出拳」，第 3 帧才打出去；
+        // 第 2 段只剩「出拳→收招」，第 1 帧就是拳峰。所以两段要分开设。
+        public float ImpactDelay = 0.17f;      // 第一段：等第 3 帧
+        public float LaterHitImpact = 0.02f;   // 后续段：立刻结算
 
         // 连招参数
         public int ComboHits = 2;            // 一共几段
@@ -129,7 +134,7 @@ namespace XianXia.World
 
             // 最后一段是收招，伤害更高
             _pendingDamageMul = (hit == ComboHits - 1) ? LastHitDamageMul : 1f;
-            _pendingHitLeft = Mathf.Max(0f, ImpactDelay);
+            _pendingHitLeft = Mathf.Max(0f, hit == 0 ? ImpactDelay : LaterHitImpact);
 
             // 窗口内再按 J 就接下一段，否则回到第一段
             _comboWindowLeft = ComboWindow;
@@ -195,6 +200,10 @@ namespace XianXia.World
                 if (Vector2.Distance((Vector2)e.transform.position, center) > Radius) continue;
 
                 e.TakeDamage(dmg);
+
+                // 朝背离玩家的方向击退，具体距离由敌人自己的击退度决定
+                e.ApplyKnockback(e.transform.position - transform.position, Knockback);
+
                 DamageNumber.Spawn(
                     e.transform.position + Vector3.up * (1.1f * PixelArtSettings.CharacterScale),
                     dmg, new Color(1f, 0.92f, 0.55f), PixelArtSettings.CharacterScale);

@@ -13,7 +13,8 @@
       "attackInterval": 1.2,
       "exp": 10,
       "resonance": 1,
-      "materials": 0
+      "materials": 0,
+      "knockbackResist": 0.35
     },
     {
       "id": "beast",
@@ -27,7 +28,8 @@
       "attackInterval": 1.0,
       "exp": 10,
       "resonance": 1,
-      "materials": 1
+      "materials": 1,
+      "knockbackResist": 0.15
     },
     {
       "id": "elite",
@@ -41,7 +43,8 @@
       "attackInterval": 1.8,
       "exp": 30,
       "resonance": 2,
-      "materials": 1
+      "materials": 1,
+      "knockbackResist": 0.75
     }
   ],
   "spawns": [

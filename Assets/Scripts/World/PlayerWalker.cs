@@ -136,6 +136,13 @@ namespace XianXia.World
 
             if (_attacking) AdvanceAttack(Time.deltaTime);
 
+            // 攻击期间锁住移动：动画照常推进，但人不许走
+            if (_attacking)
+            {
+                SetIdle();
+                return;
+            }
+
             if (GameFlow.IsBlocked)
             {
                 SetIdle();

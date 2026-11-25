@@ -46,6 +46,21 @@ namespace XianXia.World
                 transform.position = new Vector3(cur.x, want.y, transform.position.z);
         }
 
+        // 按「击退度」折算后再推。force 是基础击退距离（世界单位），
+        // resist=0 全额吃下，resist=1 完全免疫。
+        public void ApplyKnockback(Vector3 dir, float force)
+        {
+            if (_dead || force <= 0f) return;
+
+            float resist = Def != null ? Mathf.Clamp01(Def.knockbackResist) : 0f;
+            float amount = force * (1f - resist);
+            if (amount <= 0.001f) return;
+
+            var d = new Vector3(dir.x, dir.y, 0f);
+            if (d.sqrMagnitude < 0.0001f) return;
+            Push(d.normalized * amount);
+        }
+
         const float BarWidth = 0.9f;
         const float BarHeight = 0.1f;
 

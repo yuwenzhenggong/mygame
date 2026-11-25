@@ -734,27 +734,57 @@ namespace XianXia.UI
             UIFactory.Stretch(overlay.rectTransform, 0f, 0f, 0f, 0f);
             _backpackPanel = overlay.rectTransform;
 
-            var inner = UIFactory.NewImage("BackpackBox", overlay.transform, new Color(0.09f, 0.11f, 0.14f, 0.99f));
-            var rt = inner.rectTransform;
+            // 和事件对话框同一套暖白描边
+            Transform boxInner;
+            var box = UIFactory.NewLayeredBox("BackpackBox", overlay.transform,
+                new Color[] { UIFactory.DlgDark, UIFactory.DlgCream, UIFactory.DlgTan, UIFactory.DlgCream },
+                new float[] { 0f, 2f, 5f, 6f },
+                out boxInner);
+
+            var rt = box.rectTransform;
             rt.anchorMin = new Vector2(0.5f, 0.5f);
             rt.anchorMax = new Vector2(0.5f, 0.5f);
             rt.pivot = new Vector2(0.5f, 0.5f);
-            rt.sizeDelta = new Vector2(620f, 336f);
+            rt.sizeDelta = new Vector2(620f, 300f);
             rt.anchoredPosition = Vector2.zero;
 
-            var title = UIFactory.NewText("Title", inner.transform, "背包", UIFactory.SizeTitle,
-                new Color(0.95f, 0.90f, 0.72f), TextAnchor.MiddleLeft);
-            UIFactory.Anchor(title.rectTransform, new Vector2(0f, 1f), new Vector2(1f, 1f),
-                new Vector2(20f, -46f), new Vector2(-20f, -12f));
+            // 姓名牌：同样骑在左上沿
+            Transform plateInner;
+            var plate = UIFactory.NewLayeredBox("BagPlate", box.transform,
+                new Color[] { UIFactory.DlgDark }, new float[] { 0f }, out plateInner);
 
-            _backpackBody = UIFactory.NewText("Body", inner.transform, "", UIFactory.SizeNormal,
-                new Color(0.85f, 0.88f, 0.92f), TextAnchor.UpperLeft);
+            var plateRt = plate.rectTransform;
+            plateRt.anchorMin = new Vector2(0f, 1f);
+            plateRt.anchorMax = new Vector2(0f, 1f);
+            plateRt.pivot = new Vector2(0f, 0f);
+            plateRt.sizeDelta = new Vector2(104f, 22f);
+            plateRt.anchoredPosition = new Vector2(26f, -2f);
+
+            var accent = UIFactory.NewImage("Accent", plate.transform, UIFactory.DlgGold);
+            accent.raycastTarget = false;
+            UIFactory.Anchor(accent.rectTransform, new Vector2(0f, 0.5f), new Vector2(0f, 0.5f),
+                new Vector2(6f, -6f), new Vector2(8f, 6f));
+
+            var title = UIFactory.NewText("Title", plate.transform, "背包", UIFactory.SizeNormal,
+                UIFactory.DlgCream, TextAnchor.MiddleLeft);
+            UIFactory.Anchor(title.rectTransform, new Vector2(0f, 0f), new Vector2(1f, 1f),
+                new Vector2(14f, 0f), new Vector2(-6f, 0f));
+
+            _backpackBody = UIFactory.NewText("Body", box.transform, "", UIFactory.SizeNormal,
+                UIFactory.DlgDark, TextAnchor.UpperLeft);
             UIFactory.Anchor(_backpackBody.rectTransform, new Vector2(0f, 0f), new Vector2(1f, 1f),
-                new Vector2(20f, 54f), new Vector2(-20f, -52f));
+                new Vector2(20f, 62f), new Vector2(-20f, -18f));
 
-            var btn = UIFactory.NewButton("Close", inner.transform, "关闭（B）", UIFactory.SizeNormal, CloseBackpack);
+            // 分隔线，和对话框呼应
+            var line = UIFactory.NewImage("Divider", box.transform,
+                new Color(UIFactory.DlgTan.r, UIFactory.DlgTan.g, UIFactory.DlgTan.b, 0.55f));
+            line.raycastTarget = false;
+            UIFactory.Anchor(line.rectTransform, new Vector2(0f, 0f), new Vector2(1f, 0f),
+                new Vector2(20f, 56f), new Vector2(-20f, 57f));
+
+            var btn = UIFactory.NewDialogButton("Close", box.transform, "关闭（B）", UIFactory.SizeNormal, CloseBackpack);
             UIFactory.Anchor(btn.GetComponent<RectTransform>(), new Vector2(0.5f, 0f), new Vector2(0.5f, 0f),
-                new Vector2(-80f, 12f), new Vector2(80f, 46f));
+                new Vector2(-70f, 12f), new Vector2(70f, 48f));
 
             _backpackPanel.gameObject.SetActive(false);
         }
@@ -770,16 +800,16 @@ namespace XianXia.UI
                 ? WorldRoot.Instance.PlayerTransform.GetComponent<XianXia.World.AbilityCaster>()
                 : null;
 
-            sb.AppendLine("<color=#ffd479>资源</color>　残响 ×" + st.resonanceCount +
+            sb.AppendLine("<color=#8a6a3a>资源</color>　残响 ×" + st.resonanceCount +
                           "　素材 ×" + st.breakthroughMaterials);
-            sb.AppendLine("<color=#ffd479>境界</color>　" + Session.RealmName + "　Lv." + Session.Level +
+            sb.AppendLine("<color=#8a6a3a>境界</color>　" + Session.RealmName + "　Lv." + Session.Level +
                           "　经验 " + st.exp + " / " + Session.ExpToNext +
                           "　累计 " + st.totalExp + " / " + GameSession.BreakthroughExpNeed);
-            sb.AppendLine("<color=#ffd479>委托</color>　" + Session.QuestProgressText());
+            sb.AppendLine("<color=#8a6a3a>委托</color>　" + Session.QuestProgressText());
             sb.AppendLine();
 
-            sb.AppendLine("<color=#ffd479>异能</color>　" + st.abilities.Count + " / " + Content.Abilities.Count +
-                          "　<color=#8a8f98>（数字键 1~7 释放）</color>");
+            sb.AppendLine("<color=#8a6a3a>异能</color>　" + st.abilities.Count + " / " + Content.Abilities.Count +
+                          "　<color=#9a9288>（数字键 1~7 释放）</color>");
 
             for (int i = 0; i < Content.Abilities.Count; i++)
             {
@@ -788,18 +818,18 @@ namespace XianXia.UI
 
                 if (!st.abilities.Contains(a.id))
                 {
-                    if (a.refinable) sb.AppendLine("　" + (i + 1) + ". <color=#666f7a>？？　未炼化</color>");
+                    if (a.refinable) sb.AppendLine("　" + (i + 1) + ". <color=#b3ada3>？？　未炼化</color>");
                     continue;
                 }
 
-                var line = "　" + (i + 1) + ". <color=#8ab4ff>" + a.name + "</color>";
+                var line = "　" + (i + 1) + ". <color=#2f6fb0>" + a.name + "</color>";
 
                 if (!a.active)
                     line += "　" + a.desc;
                 else
                 {
                     if (caster != null && caster.CooldownLeft(i) > 0f)
-                        line += "　<color=#ffa657>冷却 " + Mathf.CeilToInt(caster.CooldownLeft(i)) + "s</color>";
+                        line += "　<color=#c07a1e>冷却 " + Mathf.CeilToInt(caster.CooldownLeft(i)) + "s</color>";
                     if (!string.IsNullOrEmpty(a.activeDesc)) line += "　" + a.activeDesc;
                 }
 

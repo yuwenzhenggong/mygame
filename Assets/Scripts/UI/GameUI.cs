@@ -24,6 +24,10 @@ namespace XianXia.UI
         Text _promptText;
 
         RectTransform _statusRoot;
+        RectTransform _gameArea;
+        CanvasScaler _canvasScaler;
+        int _lastScreenW;
+        int _lastScreenH;
         Image _hpFill;
         Image _expFill;
         Text _infoLine;
@@ -87,13 +91,26 @@ namespace XianXia.UI
             canvas.renderMode = RenderMode.ScreenSpaceOverlay;
 
             var scaler = canvasGo.GetComponent<CanvasScaler>();
-            scaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
-            scaler.referenceResolution = new Vector2(PixelArtSettings.ReferenceWidth, PixelArtSettings.ReferenceHeight);
-            scaler.matchWidthOrHeight = 0.5f;
+            // 固定像素缩放：稍后按「和 PixelPerfectCamera 相同的整数倍率」设置 scaleFactor，
+            // 这样 HUD 和地图是同一个比例，不会在非 16:9 窗口下被拉大。
+            scaler.uiScaleMode = CanvasScaler.ScaleMode.ConstantPixelSize;
             scaler.referencePixelsPerUnit = PixelArtSettings.PixelsPerUnit;
+            _canvasScaler = scaler;
+
+            // 只在「地图实际渲染的那块 640x360 区域」里布局 UI。
+            // 窗口比 16:9 宽/窄时地图两侧会有黑边，HUD 不该跑到黑边上去。
+            var gameArea = UIFactory.NewRect("GameArea", canvasGo.transform);
+            gameArea.anchorMin = new Vector2(0.5f, 0.5f);
+            gameArea.anchorMax = new Vector2(0.5f, 0.5f);
+            gameArea.pivot = new Vector2(0.5f, 0.5f);
+            gameArea.sizeDelta = new Vector2(PixelArtSettings.ReferenceWidth, PixelArtSettings.ReferenceHeight);
+            gameArea.anchoredPosition = Vector2.zero;
+            _gameArea = gameArea;
+
+            ApplyPixelScale();
 
             // 平时隐藏的 HUD 容器：状态栏、日志、按钮都挂在这下面，ESC 整体开关
-            var hud = UIFactory.NewRect("Hud", canvasGo.transform);
+            var hud = UIFactory.NewRect("Hud", gameArea);
             UIFactory.Stretch(hud, 0f, 0f, 0f, 0f);
             _hudRoot = hud;
 
@@ -132,7 +149,7 @@ namespace XianXia.UI
             UIFactory.Stretch(_logText.rectTransform, 8f, 6f, 8f, 6f);
 
             // 互动提示（按钮栏正上方）
-            _promptText = UIFactory.NewText("Prompt", canvasGo.transform, "", UIFactory.SizeNormal,
+            _promptText = UIFactory.NewText("Prompt", gameArea, "", UIFactory.SizeNormal,
                 new Color(0.90f, 0.95f, 1f), TextAnchor.MiddleCenter);
             var promptRt = _promptText.rectTransform;
             promptRt.anchorMin = new Vector2(0.5f, 0f);
@@ -158,9 +175,9 @@ namespace XianXia.UI
             AddBarButton(bar, "读档", OnLoad);
             AddBarButton(bar, "重开", OnRestart);
 
-            BuildStatusBar(canvasGo.transform);
-            BuildEventPanel(canvasGo.transform);
-            BuildBackpackPanel(canvasGo.transform);
+            BuildStatusBar(gameArea);
+            BuildEventPanel(gameArea);
+            BuildBackpackPanel(gameArea);
 
             // 默认收起：一进游戏就是干净的画面，只留互动提示和一条血条
             hud.gameObject.SetActive(false);
@@ -261,8 +278,36 @@ namespace XianXia.UI
             return fill;
         }
 
+        // 画布缩放取「和 PixelPerfectCamera 相同的整数倍率」：
+        // 1 个画布单位正好等于地图里的 1 个像素，HUD 既不会被拉大，也不会跑出地图。
+        void ApplyPixelScale()
+        {
+            if (_canvasScaler == null) return;
+
+            int sw = Screen.width > 0 ? Screen.width : PixelArtSettings.ReferenceWidth;
+            int sh = Screen.height > 0 ? Screen.height : PixelArtSettings.ReferenceHeight;
+
+            int sx = Mathf.Max(1, sw / PixelArtSettings.ReferenceWidth);
+            int sy = Mathf.Max(1, sh / PixelArtSettings.ReferenceHeight);
+            int scale = Mathf.Max(1, Mathf.Min(sx, sy));
+
+            if (!Mathf.Approximately(_canvasScaler.scaleFactor, scale))
+                _canvasScaler.scaleFactor = scale;
+
+            // GameArea 永远是地图的 640x360，窗口怎么变都不动
+            if (_gameArea != null)
+                _gameArea.sizeDelta = new Vector2(PixelArtSettings.ReferenceWidth, PixelArtSettings.ReferenceHeight);
+        }
+
         void Update()
         {
+            // 窗口尺寸变了要重算缩放，否则 HUD 会和地图错位
+            if (Screen.width != _lastScreenW || Screen.height != _lastScreenH)
+            {
+                _lastScreenW = Screen.width;
+                _lastScreenH = Screen.height;
+                ApplyPixelScale();
+            }
             // 背包开着的时候，B / ESC 都用来关背包
             if (_backpackPanel != null && _backpackPanel.gameObject.activeSelf)
             {

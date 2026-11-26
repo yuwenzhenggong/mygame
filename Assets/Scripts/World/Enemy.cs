@@ -24,6 +24,18 @@ namespace XianXia.World
         float _revealLeft;
         bool _dead;
 
+        Sprite[] _idleFrames = new Sprite[0];
+        Sprite[] _walkFrames = new Sprite[0];
+        Sprite[] _attackFrames = new Sprite[0];
+        float _visualTime;
+        float _attackVisualLeft;
+        float _attackImpactLeft = -1f;
+        float _walkFrameDuration;
+        bool _wasMoving;
+        bool _attackFaceRight;
+        const float IdleFrameDuration = 0.1f;
+        const float AttackFrameDuration = 0.05f;
+
         // 灵视显形：持续时间内给个偏冷的高亮
         public void Highlight(float seconds)
         {
@@ -80,7 +92,50 @@ namespace XianXia.World
             if (sprite != null)
                 bodyGo.transform.localPosition = new Vector3(0f, sprite.bounds.size.y * 0.5f, 0f);
 
+            _idleFrames = LoadAnimation("idle");
+            _walkFrames = LoadAnimation("walk");
+            _attackFrames = LoadAnimation("attack");
+            // 追逐越慢，步频也越低，精英的步态会比普通异兽沉重。
+            _walkFrameDuration = 0.035f * 3f / Mathf.Max(0.1f, def.speed);
+
             BuildBar(sprite, pxWhite);
+        }
+
+        Sprite[] LoadAnimation(string action)
+        {
+            var frames = new System.Collections.Generic.List<Sprite>();
+            for (int i = 0; i < 64; i++)
+            {
+                var frame = Resources.Load<Sprite>(PixelArtSettings.ArtResourceRoot + Def.sprite + "_" + action + "_" + i);
+                if (frame == null) break;
+                frames.Add(frame);
+            }
+            return frames.ToArray();
+        }
+
+        void UpdateSpriteAnimation(bool moving, Vector2 direction, float dt)
+        {
+            if (_body == null || (_idleFrames.Length == 0 && _walkFrames.Length == 0 && _attackFrames.Length == 0)) return;
+
+            if (_attackVisualLeft > 0f && _attackFrames.Length > 0)
+            {
+                float elapsed = _attackFrames.Length * AttackFrameDuration - _attackVisualLeft;
+                int frame = Mathf.Clamp(Mathf.FloorToInt(elapsed / AttackFrameDuration), 0, _attackFrames.Length - 1);
+                _body.sprite = _attackFrames[frame];
+                _body.flipX = _attackFaceRight;
+                _attackVisualLeft = Mathf.Max(0f, _attackVisualLeft - dt);
+                _visualTime = 0f;
+                return;
+            }
+
+            if (moving != _wasMoving) _visualTime = 0f;
+            _wasMoving = moving;
+            if (Mathf.Abs(direction.x) > 0.01f) _body.flipX = direction.x > 0f;
+            var frames = moving && _walkFrames.Length > 0 ? _walkFrames : _idleFrames;
+            if (frames.Length == 0) return;
+            float duration = moving ? _walkFrameDuration : IdleFrameDuration;
+            _body.sprite = frames[Mathf.FloorToInt(_visualTime / duration) % frames.Length];
+            _visualTime += dt;
         }
 
         void BuildBar(Sprite sprite, Sprite pxWhite)
@@ -152,19 +207,57 @@ namespace XianXia.World
             var playerPos = (Vector2)_player.position;
             float dist = Vector2.Distance(myPos, playerPos);
 
-            if (dist > Def.aggroRange) return;
+            // 扑咬期间停步：先蓄力，画面张嘴前扑时才结算伤害。
+            // 玩家在前摇期间离开攻击距离，就能躲过这一击。
+            if (_attackVisualLeft > 0f)
+            {
+                _attackTimer -= Time.deltaTime;
+                if (_attackImpactLeft >= 0f)
+                {
+                    _attackImpactLeft -= Time.deltaTime;
+                    if (_attackImpactLeft <= 0f)
+                    {
+                        _attackImpactLeft = -1f;
+                        var target = _player.GetComponent<PlayerCombat>();
+                        if (target != null && dist <= Def.attackRange) target.TakeDamage(Def.damage);
+                    }
+                }
+                UpdateSpriteAnimation(false, Vector2.zero, Time.deltaTime);
+                return;
+            }
+
+            if (dist > Def.aggroRange)
+            {
+                UpdateSpriteAnimation(false, Vector2.zero, Time.deltaTime);
+                return;
+            }
 
             if (dist > Def.attackRange)
             {
                 var dir = (playerPos - myPos).normalized;
+                var before = transform.position;
                 Move(dir * Def.speed * Time.deltaTime);
+                UpdateSpriteAnimation((transform.position - before).sqrMagnitude > 1e-8f, dir, Time.deltaTime);
                 return;
             }
 
             _attackTimer -= Time.deltaTime;
-            if (_attackTimer > 0f) return;
+            if (_attackTimer > 0f)
+            {
+                UpdateSpriteAnimation(false, playerPos - myPos, Time.deltaTime);
+                return;
+            }
 
             _attackTimer = Def.attackInterval;
+            _attackFaceRight = Mathf.Abs(playerPos.x - myPos.x) > 0.01f ? playerPos.x > myPos.x : _body.flipX;
+            _attackVisualLeft = _attackFrames.Length * AttackFrameDuration;
+            UpdateSpriteAnimation(false, playerPos - myPos, Time.deltaTime);
+
+            if (_attackFrames.Length > 0)
+            {
+                _attackImpactLeft = 5f * AttackFrameDuration;
+                return;
+            }
 
             var combat = _player.GetComponent<PlayerCombat>();
             if (combat != null) combat.TakeDamage(Def.damage);

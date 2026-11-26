@@ -1,0 +1,9 @@
+{
+  "runtime_compile_exit_code": 0,
+  "compiler": "Unity 2021.3.19f1c1 bundled Mono/Roslyn",
+  "compiler_warning": "CS2023: /noconfig ignored in response file; no compilation errors",
+  "unity_start_exit_code": 1,
+  "unity_error": "No valid Unity Editor license found. Please activate your license.",
+  "unity_log": "C:/Users/35226/AppData/Local/Temp/mygame-walk-license.log",
+  "engine_playback_verified": false
+}

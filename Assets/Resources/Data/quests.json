@@ -3,8 +3,8 @@
     {
       "id": "q_core",
       "name": "凝核之前",
-      "desc": "去旧街区外的林子，清剿两个异能者打手。",
-      "targetEnemy": "attacker",
+      "desc": "去旧街区外的林子，清剿两只普通獠兽。",
+      "targetEnemy": "beast",
       "targetCount": 2,
       "rewardExp": 20
     }

@@ -1,0 +1,27 @@
+{
+  "status": "SVG source package; runtime integration is checked separately",
+  "normal_canvas": [
+    96,
+    64
+  ],
+  "elite_canvas": [
+    132,
+    88
+  ],
+  "actions": {
+    "idle": {
+      "frames": 12,
+      "frame_seconds": 0.1
+    },
+    "walk": {
+      "frames": 24,
+      "frame_seconds": 0.035
+    },
+    "attack": {
+      "frames": 12,
+      "frame_seconds": 0.05
+    }
+  },
+  "source_format": "Layered SVG with named body parts",
+  "runtime_files_modified": false
+}

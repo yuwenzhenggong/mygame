@@ -268,7 +268,7 @@ namespace XianXia
 
             if (State.questState == "已完成") return "<color=#7ee787>「" + q.name + "」已完成</color>";
             if (State.questState == "进行中")
-                return "「" + q.name + "」　清剿打手 " + State.questKills + " / " + q.targetCount;
+                return "「" + q.name + "」　清剿异兽 " + State.questKills + " / " + q.targetCount;
             return "「" + q.name + "」　未接取";
         }
 

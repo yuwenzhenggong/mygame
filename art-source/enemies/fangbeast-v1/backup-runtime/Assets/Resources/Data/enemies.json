@@ -1,0 +1,56 @@
+{
+  "respawnOnEnter": true,
+  "enemies": [
+    {
+      "id": "attacker",
+      "name": "异能者打手",
+      "sprite": "enemy_attacker",
+      "hp": 40,
+      "damage": 8,
+      "speed": 2.4,
+      "aggroRange": 5.0,
+      "attackRange": 0.95,
+      "attackInterval": 1.2,
+      "exp": 10,
+      "resonance": 1,
+      "materials": 0,
+      "knockbackResist": 0.35
+    },
+    {
+      "id": "beast",
+      "name": "异兽",
+      "sprite": "enemy_beast",
+      "hp": 30,
+      "damage": 6,
+      "speed": 3.0,
+      "aggroRange": 5.0,
+      "attackRange": 0.85,
+      "attackInterval": 1.0,
+      "exp": 10,
+      "resonance": 1,
+      "materials": 1,
+      "knockbackResist": 0.15
+    },
+    {
+      "id": "elite",
+      "name": "精英异能者",
+      "sprite": "enemy_elite",
+      "hp": 80,
+      "damage": 12,
+      "speed": 2.0,
+      "aggroRange": 6.0,
+      "attackRange": 1.05,
+      "attackInterval": 1.8,
+      "exp": 30,
+      "resonance": 2,
+      "materials": 1,
+      "knockbackResist": 0.75
+    }
+  ],
+  "spawns": [
+    { "id": "s_attacker_1", "scene": "jungle", "enemy": "attacker", "imageX": 296, "imageY": 200 },
+    { "id": "s_attacker_2", "scene": "jungle", "enemy": "attacker", "imageX": 648, "imageY": 216 },
+    { "id": "s_beast_1", "scene": "jungle", "enemy": "beast", "imageX": 300, "imageY": 380 },
+    { "id": "s_elite_1", "scene": "jungle", "enemy": "elite", "imageX": 680, "imageY": 328 }
+  ]
+}

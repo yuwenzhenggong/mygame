@@ -1,0 +1,1287 @@
+{
+  "passed": true,
+  "png_files": 98,
+  "svg_files": 98,
+  "normal_walk_unique_frames": 24,
+  "walk_cycle_seconds": 0.84,
+  "walk_internal_max_difference": 3.5614827473958335,
+  "walk_seam_difference": 1.589111328125,
+  "runtime_snapshot_matches_expected": true,
+  "integrated_in_game": true,
+  "bounds": [
+    {
+      "name": "png\\elite.png",
+      "size": [
+        132,
+        88
+      ],
+      "bounds": [
+        8,
+        5,
+        125,
+        88
+      ]
+    },
+    {
+      "name": "png\\normal.png",
+      "size": [
+        96,
+        64
+      ],
+      "bounds": [
+        6,
+        10,
+        91,
+        64
+      ]
+    },
+    {
+      "name": "png\\attack\\00.png",
+      "size": [
+        96,
+        64
+      ],
+      "bounds": [
+        6,
+        10,
+        91,
+        64
+      ]
+    },
+    {
+      "name": "png\\attack\\01.png",
+      "size": [
+        96,
+        64
+      ],
+      "bounds": [
+        6,
+        11,
+        91,
+        64
+      ]
+    },
+    {
+      "name": "png\\attack\\02.png",
+      "size": [
+        96,
+        64
+      ],
+      "bounds": [
+        6,
+        11,
+        91,
+        64
+      ]
+    },
+    {
+      "name": "png\\attack\\03.png",
+      "size": [
+        96,
+        64
+      ],
+      "bounds": [
+        6,
+        12,
+        91,
+        64
+      ]
+    },
+    {
+      "name": "png\\attack\\04.png",
+      "size": [
+        96,
+        64
+      ],
+      "bounds": [
+        5,
+        10,
+        90,
+        64
+      ]
+    },
+    {
+      "name": "png\\attack\\05.png",
+      "size": [
+        96,
+        64
+      ],
+      "bounds": [
+        2,
+        9,
+        87,
+        64
+      ]
+    },
+    {
+      "name": "png\\attack\\06.png",
+      "size": [
+        96,
+        64
+      ],
+      "bounds": [
+        2,
+        9,
+        88,
+        64
+      ]
+    },
+    {
+      "name": "png\\attack\\07.png",
+      "size": [
+        96,
+        64
+      ],
+      "bounds": [
+        5,
+        9,
+        90,
+        64
+      ]
+    },
+    {
+      "name": "png\\attack\\08.png",
+      "size": [
+        96,
+        64
+      ],
+      "bounds": [
+        6,
+        9,
+        91,
+        64
+      ]
+    },
+    {
+      "name": "png\\attack\\09.png",
+      "size": [
+        96,
+        64
+      ],
+      "bounds": [
+        6,
+        9,
+        91,
+        64
+      ]
+    },
+    {
+      "name": "png\\attack\\10.png",
+      "size": [
+        96,
+        64
+      ],
+      "bounds": [
+        6,
+        9,
+        91,
+        64
+      ]
+    },
+    {
+      "name": "png\\attack\\11.png",
+      "size": [
+        96,
+        64
+      ],
+      "bounds": [
+        6,
+        9,
+        91,
+        64
+      ]
+    },
+    {
+      "name": "png\\idle\\00.png",
+      "size": [
+        96,
+        64
+      ],
+      "bounds": [
+        6,
+        10,
+        91,
+        64
+      ]
+    },
+    {
+      "name": "png\\idle\\01.png",
+      "size": [
+        96,
+        64
+      ],
+      "bounds": [
+        6,
+        10,
+        91,
+        64
+      ]
+    },
+    {
+      "name": "png\\idle\\02.png",
+      "size": [
+        96,
+        64
+      ],
+      "bounds": [
+        6,
+        10,
+        91,
+        64
+      ]
+    },
+    {
+      "name": "png\\idle\\03.png",
+      "size": [
+        96,
+        64
+      ],
+      "bounds": [
+        6,
+        10,
+        91,
+        64
+      ]
+    },
+    {
+      "name": "png\\idle\\04.png",
+      "size": [
+        96,
+        64
+      ],
+      "bounds": [
+        6,
+        10,
+        91,
+        64
+      ]
+    },
+    {
+      "name": "png\\idle\\05.png",
+      "size": [
+        96,
+        64
+      ],
+      "bounds": [
+        6,
+        10,
+        91,
+        64
+      ]
+    },
+    {
+      "name": "png\\idle\\06.png",
+      "size": [
+        96,
+        64
+      ],
+      "bounds": [
+        6,
+        10,
+        91,
+        64
+      ]
+    },
+    {
+      "name": "png\\idle\\07.png",
+      "size": [
+        96,
+        64
+      ],
+      "bounds": [
+        6,
+        9,
+        91,
+        64
+      ]
+    },
+    {
+      "name": "png\\idle\\08.png",
+      "size": [
+        96,
+        64
+      ],
+      "bounds": [
+        6,
+        9,
+        91,
+        64
+      ]
+    },
+    {
+      "name": "png\\idle\\09.png",
+      "size": [
+        96,
+        64
+      ],
+      "bounds": [
+        6,
+        9,
+        91,
+        64
+      ]
+    },
+    {
+      "name": "png\\idle\\10.png",
+      "size": [
+        96,
+        64
+      ],
+      "bounds": [
+        6,
+        9,
+        91,
+        64
+      ]
+    },
+    {
+      "name": "png\\idle\\11.png",
+      "size": [
+        96,
+        64
+      ],
+      "bounds": [
+        6,
+        9,
+        91,
+        64
+      ]
+    },
+    {
+      "name": "png\\walk\\00.png",
+      "size": [
+        96,
+        64
+      ],
+      "bounds": [
+        6,
+        10,
+        91,
+        64
+      ]
+    },
+    {
+      "name": "png\\walk\\01.png",
+      "size": [
+        96,
+        64
+      ],
+      "bounds": [
+        6,
+        10,
+        91,
+        64
+      ]
+    },
+    {
+      "name": "png\\walk\\02.png",
+      "size": [
+        96,
+        64
+      ],
+      "bounds": [
+        6,
+        10,
+        91,
+        64
+      ]
+    },
+    {
+      "name": "png\\walk\\03.png",
+      "size": [
+        96,
+        64
+      ],
+      "bounds": [
+        6,
+        10,
+        91,
+        64
+      ]
+    },
+    {
+      "name": "png\\walk\\04.png",
+      "size": [
+        96,
+        64
+      ],
+      "bounds": [
+        6,
+        10,
+        91,
+        64
+      ]
+    },
+    {
+      "name": "png\\walk\\05.png",
+      "size": [
+        96,
+        64
+      ],
+      "bounds": [
+        6,
+        10,
+        91,
+        64
+      ]
+    },
+    {
+      "name": "png\\walk\\06.png",
+      "size": [
+        96,
+        64
+      ],
+      "bounds": [
+        6,
+        10,
+        91,
+        64
+      ]
+    },
+    {
+      "name": "png\\walk\\07.png",
+      "size": [
+        96,
+        64
+      ],
+      "bounds": [
+        6,
+        10,
+        91,
+        64
+      ]
+    },
+    {
+      "name": "png\\walk\\08.png",
+      "size": [
+        96,
+        64
+      ],
+      "bounds": [
+        6,
+        10,
+        91,
+        64
+      ]
+    },
+    {
+      "name": "png\\walk\\09.png",
+      "size": [
+        96,
+        64
+      ],
+      "bounds": [
+        6,
+        10,
+        91,
+        64
+      ]
+    },
+    {
+      "name": "png\\walk\\10.png",
+      "size": [
+        96,
+        64
+      ],
+      "bounds": [
+        6,
+        10,
+        91,
+        64
+      ]
+    },
+    {
+      "name": "png\\walk\\11.png",
+      "size": [
+        96,
+        64
+      ],
+      "bounds": [
+        6,
+        10,
+        91,
+        64
+      ]
+    },
+    {
+      "name": "png\\walk\\12.png",
+      "size": [
+        96,
+        64
+      ],
+      "bounds": [
+        6,
+        10,
+        91,
+        64
+      ]
+    },
+    {
+      "name": "png\\walk\\13.png",
+      "size": [
+        96,
+        64
+      ],
+      "bounds": [
+        6,
+        10,
+        91,
+        64
+      ]
+    },
+    {
+      "name": "png\\walk\\14.png",
+      "size": [
+        96,
+        64
+      ],
+      "bounds": [
+        6,
+        10,
+        91,
+        64
+      ]
+    },
+    {
+      "name": "png\\walk\\15.png",
+      "size": [
+        96,
+        64
+      ],
+      "bounds": [
+        6,
+        10,
+        91,
+        64
+      ]
+    },
+    {
+      "name": "png\\walk\\16.png",
+      "size": [
+        96,
+        64
+      ],
+      "bounds": [
+        6,
+        10,
+        91,
+        64
+      ]
+    },
+    {
+      "name": "png\\walk\\17.png",
+      "size": [
+        96,
+        64
+      ],
+      "bounds": [
+        6,
+        10,
+        91,
+        64
+      ]
+    },
+    {
+      "name": "png\\walk\\18.png",
+      "size": [
+        96,
+        64
+      ],
+      "bounds": [
+        6,
+        10,
+        91,
+        64
+      ]
+    },
+    {
+      "name": "png\\walk\\19.png",
+      "size": [
+        96,
+        64
+      ],
+      "bounds": [
+        6,
+        10,
+        91,
+        64
+      ]
+    },
+    {
+      "name": "png\\walk\\20.png",
+      "size": [
+        96,
+        64
+      ],
+      "bounds": [
+        6,
+        10,
+        91,
+        64
+      ]
+    },
+    {
+      "name": "png\\walk\\21.png",
+      "size": [
+        96,
+        64
+      ],
+      "bounds": [
+        6,
+        10,
+        91,
+        64
+      ]
+    },
+    {
+      "name": "png\\walk\\22.png",
+      "size": [
+        96,
+        64
+      ],
+      "bounds": [
+        6,
+        10,
+        91,
+        64
+      ]
+    },
+    {
+      "name": "png\\walk\\23.png",
+      "size": [
+        96,
+        64
+      ],
+      "bounds": [
+        6,
+        10,
+        91,
+        64
+      ]
+    },
+    {
+      "name": "png\\elite\\attack\\00.png",
+      "size": [
+        132,
+        88
+      ],
+      "bounds": [
+        8,
+        5,
+        125,
+        88
+      ]
+    },
+    {
+      "name": "png\\elite\\attack\\01.png",
+      "size": [
+        132,
+        88
+      ],
+      "bounds": [
+        8,
+        6,
+        125,
+        88
+      ]
+    },
+    {
+      "name": "png\\elite\\attack\\02.png",
+      "size": [
+        132,
+        88
+      ],
+      "bounds": [
+        8,
+        7,
+        125,
+        88
+      ]
+    },
+    {
+      "name": "png\\elite\\attack\\03.png",
+      "size": [
+        132,
+        88
+      ],
+      "bounds": [
+        8,
+        7,
+        125,
+        88
+      ]
+    },
+    {
+      "name": "png\\elite\\attack\\04.png",
+      "size": [
+        132,
+        88
+      ],
+      "bounds": [
+        6,
+        5,
+        123,
+        88
+      ]
+    },
+    {
+      "name": "png\\elite\\attack\\05.png",
+      "size": [
+        132,
+        88
+      ],
+      "bounds": [
+        3,
+        4,
+        120,
+        88
+      ]
+    },
+    {
+      "name": "png\\elite\\attack\\06.png",
+      "size": [
+        132,
+        88
+      ],
+      "bounds": [
+        3,
+        4,
+        121,
+        88
+      ]
+    },
+    {
+      "name": "png\\elite\\attack\\07.png",
+      "size": [
+        132,
+        88
+      ],
+      "bounds": [
+        7,
+        4,
+        124,
+        88
+      ]
+    },
+    {
+      "name": "png\\elite\\attack\\08.png",
+      "size": [
+        132,
+        88
+      ],
+      "bounds": [
+        8,
+        4,
+        125,
+        88
+      ]
+    },
+    {
+      "name": "png\\elite\\attack\\09.png",
+      "size": [
+        132,
+        88
+      ],
+      "bounds": [
+        8,
+        4,
+        125,
+        88
+      ]
+    },
+    {
+      "name": "png\\elite\\attack\\10.png",
+      "size": [
+        132,
+        88
+      ],
+      "bounds": [
+        8,
+        4,
+        125,
+        88
+      ]
+    },
+    {
+      "name": "png\\elite\\attack\\11.png",
+      "size": [
+        132,
+        88
+      ],
+      "bounds": [
+        8,
+        4,
+        125,
+        88
+      ]
+    },
+    {
+      "name": "png\\elite\\idle\\00.png",
+      "size": [
+        132,
+        88
+      ],
+      "bounds": [
+        8,
+        5,
+        125,
+        88
+      ]
+    },
+    {
+      "name": "png\\elite\\idle\\01.png",
+      "size": [
+        132,
+        88
+      ],
+      "bounds": [
+        8,
+        5,
+        125,
+        88
+      ]
+    },
+    {
+      "name": "png\\elite\\idle\\02.png",
+      "size": [
+        132,
+        88
+      ],
+      "bounds": [
+        8,
+        5,
+        125,
+        88
+      ]
+    },
+    {
+      "name": "png\\elite\\idle\\03.png",
+      "size": [
+        132,
+        88
+      ],
+      "bounds": [
+        8,
+        5,
+        125,
+        88
+      ]
+    },
+    {
+      "name": "png\\elite\\idle\\04.png",
+      "size": [
+        132,
+        88
+      ],
+      "bounds": [
+        8,
+        5,
+        125,
+        88
+      ]
+    },
+    {
+      "name": "png\\elite\\idle\\05.png",
+      "size": [
+        132,
+        88
+      ],
+      "bounds": [
+        8,
+        5,
+        125,
+        88
+      ]
+    },
+    {
+      "name": "png\\elite\\idle\\06.png",
+      "size": [
+        132,
+        88
+      ],
+      "bounds": [
+        8,
+        5,
+        125,
+        88
+      ]
+    },
+    {
+      "name": "png\\elite\\idle\\07.png",
+      "size": [
+        132,
+        88
+      ],
+      "bounds": [
+        8,
+        4,
+        125,
+        88
+      ]
+    },
+    {
+      "name": "png\\elite\\idle\\08.png",
+      "size": [
+        132,
+        88
+      ],
+      "bounds": [
+        8,
+        4,
+        125,
+        88
+      ]
+    },
+    {
+      "name": "png\\elite\\idle\\09.png",
+      "size": [
+        132,
+        88
+      ],
+      "bounds": [
+        8,
+        4,
+        125,
+        88
+      ]
+    },
+    {
+      "name": "png\\elite\\idle\\10.png",
+      "size": [
+        132,
+        88
+      ],
+      "bounds": [
+        8,
+        4,
+        125,
+        88
+      ]
+    },
+    {
+      "name": "png\\elite\\idle\\11.png",
+      "size": [
+        132,
+        88
+      ],
+      "bounds": [
+        8,
+        4,
+        125,
+        88
+      ]
+    },
+    {
+      "name": "png\\elite\\walk\\00.png",
+      "size": [
+        132,
+        88
+      ],
+      "bounds": [
+        8,
+        5,
+        125,
+        88
+      ]
+    },
+    {
+      "name": "png\\elite\\walk\\01.png",
+      "size": [
+        132,
+        88
+      ],
+      "bounds": [
+        8,
+        5,
+        125,
+        88
+      ]
+    },
+    {
+      "name": "png\\elite\\walk\\02.png",
+      "size": [
+        132,
+        88
+      ],
+      "bounds": [
+        8,
+        5,
+        125,
+        88
+      ]
+    },
+    {
+      "name": "png\\elite\\walk\\03.png",
+      "size": [
+        132,
+        88
+      ],
+      "bounds": [
+        8,
+        5,
+        125,
+        88
+      ]
+    },
+    {
+      "name": "png\\elite\\walk\\04.png",
+      "size": [
+        132,
+        88
+      ],
+      "bounds": [
+        8,
+        5,
+        125,
+        88
+      ]
+    },
+    {
+      "name": "png\\elite\\walk\\05.png",
+      "size": [
+        132,
+        88
+      ],
+      "bounds": [
+        8,
+        6,
+        125,
+        88
+      ]
+    },
+    {
+      "name": "png\\elite\\walk\\06.png",
+      "size": [
+        132,
+        88
+      ],
+      "bounds": [
+        8,
+        6,
+        125,
+        88
+      ]
+    },
+    {
+      "name": "png\\elite\\walk\\07.png",
+      "size": [
+        132,
+        88
+      ],
+      "bounds": [
+        8,
+        6,
+        125,
+        88
+      ]
+    },
+    {
+      "name": "png\\elite\\walk\\08.png",
+      "size": [
+        132,
+        88
+      ],
+      "bounds": [
+        8,
+        5,
+        125,
+        88
+      ]
+    },
+    {
+      "name": "png\\elite\\walk\\09.png",
+      "size": [
+        132,
+        88
+      ],
+      "bounds": [
+        8,
+        5,
+        125,
+        88
+      ]
+    },
+    {
+      "name": "png\\elite\\walk\\10.png",
+      "size": [
+        132,
+        88
+      ],
+      "bounds": [
+        8,
+        5,
+        125,
+        88
+      ]
+    },
+    {
+      "name": "png\\elite\\walk\\11.png",
+      "size": [
+        132,
+        88
+      ],
+      "bounds": [
+        8,
+        5,
+        125,
+        88
+      ]
+    },
+    {
+      "name": "png\\elite\\walk\\12.png",
+      "size": [
+        132,
+        88
+      ],
+      "bounds": [
+        8,
+        5,
+        125,
+        88
+      ]
+    },
+    {
+      "name": "png\\elite\\walk\\13.png",
+      "size": [
+        132,
+        88
+      ],
+      "bounds": [
+        8,
+        5,
+        125,
+        88
+      ]
+    },
+    {
+      "name": "png\\elite\\walk\\14.png",
+      "size": [
+        132,
+        88
+      ],
+      "bounds": [
+        8,
+        5,
+        125,
+        88
+      ]
+    },
+    {
+      "name": "png\\elite\\walk\\15.png",
+      "size": [
+        132,
+        88
+      ],
+      "bounds": [
+        8,
+        5,
+        125,
+        88
+      ]
+    },
+    {
+      "name": "png\\elite\\walk\\16.png",
+      "size": [
+        132,
+        88
+      ],
+      "bounds": [
+        8,
+        5,
+        125,
+        88
+      ]
+    },
+    {
+      "name": "png\\elite\\walk\\17.png",
+      "size": [
+        132,
+        88
+      ],
+      "bounds": [
+        8,
+        6,
+        125,
+        88
+      ]
+    },
+    {
+      "name": "png\\elite\\walk\\18.png",
+      "size": [
+        132,
+        88
+      ],
+      "bounds": [
+        8,
+        6,
+        125,
+        88
+      ]
+    },
+    {
+      "name": "png\\elite\\walk\\19.png",
+      "size": [
+        132,
+        88
+      ],
+      "bounds": [
+        8,
+        6,
+        125,
+        88
+      ]
+    },
+    {
+      "name": "png\\elite\\walk\\20.png",
+      "size": [
+        132,
+        88
+      ],
+      "bounds": [
+        8,
+        5,
+        125,
+        88
+      ]
+    },
+    {
+      "name": "png\\elite\\walk\\21.png",
+      "size": [
+        132,
+        88
+      ],
+      "bounds": [
+        8,
+        5,
+        125,
+        88
+      ]
+    },
+    {
+      "name": "png\\elite\\walk\\22.png",
+      "size": [
+        132,
+        88
+      ],
+      "bounds": [
+        8,
+        5,
+        125,
+        88
+      ]
+    },
+    {
+      "name": "png\\elite\\walk\\23.png",
+      "size": [
+        132,
+        88
+      ],
+      "bounds": [
+        8,
+        5,
+        125,
+        88
+      ]
+    }
+  ]
+}

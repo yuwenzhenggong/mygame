@@ -1,0 +1,25 @@
+{
+  "applied": true,
+  "installed_sha256": {
+    "Assets\\Resources\\Art\\hero_front.png": "67540d1cd781488fa9822db470ed9ad575c6faa05873b9f3f9c05ebf5cd29c83",
+    "Assets\\Resources\\Art\\enemy_attacker.png": "53ae6a2cbafc960e23b649882d232c953643afe0d5bfa56a470286999d264319",
+    "Assets\\Resources\\Art\\enemy_beast.png": "c033b913ad5bb38404ac77da49080cf5b9562c4051fa04116c0d202a17239adb",
+    "Assets\\Resources\\Art\\enemy_elite.png": "7e9602cf1dc55fa01c0190465b00eb94e8b3a48562f02710e207e760b53f0295",
+    "Assets\\Resources\\Data\\enemies.json": "424ae1654d446a8c5bc19439f61f5092f5daba3508bad111465e520ffa075af7",
+    "Assets\\Scripts\\World\\Enemy.cs": "4b2869c6d2920207cdf71a18a2dfe1195192d67eb6fddfd5d71b0b467bafcc69"
+  },
+  "runtime_compile_exit_code": 0,
+  "normal_count": 3,
+  "elite_count": 1,
+  "attack_impact_seconds": 0.25,
+  "unity_runtime_verified": false,
+  "unity_start_exit_code": 1,
+  "unity_error": "No valid Unity Editor license found. Please activate your license.",
+  "unity_log": "C:/Users/35226/AppData/Local/Temp/mygame-beasts-unity.log",
+  "preview_type": "Offline composition, not engine footage",
+  "normal_display_scale_multiplier": 0.7,
+  "normal_world_scale": 1.05,
+  "elite_world_scale": 1.05,
+  "world_root_sha256": "daa1cb35036dd03459b0f0b498f4bcbf936368b6d521d4c36147a2d6bc6699cd",
+  "elite_display_scale_multiplier": 0.7
+}

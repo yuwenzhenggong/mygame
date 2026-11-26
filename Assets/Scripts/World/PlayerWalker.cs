@@ -21,8 +21,8 @@ namespace XianXia.World
         public float HalfWidth = 0.28f;
         public float HalfHeight = 0.16f;
 
-        // 向下跑动的帧时长。10 帧循环，0.06s/帧 → 0.6 秒一个循环
-        public float WalkFrameDuration = 0.06f;
+        // 视频提取并补帧的步行序列：24 帧 × 0.035s = 0.84 秒一个完整循环。
+        public float WalkFrameDuration = 0.035f;
 
         // 普通攻击序列帧时长。21 帧 × 0.025s ≈ 0.525 秒。
         // 连招每帧时长。每段 3 帧 × 0.08s ≈ 0.24 秒，出手有分量但不拖沓

@@ -31,7 +31,6 @@ namespace XianXia.World
 
         float _cooldownLeft;
         float _invulnLeft;
-        float _flashLeft = -1f;
         float _pendingHitLeft = -1f;
         float _pendingDamageMul = 1f;
         int _comboIndex;         // 下一次按 J 出第几段（0 起）
@@ -93,11 +92,6 @@ namespace XianXia.World
                 _invulnLeft -= Time.deltaTime;
                 if (_invulnLeft <= 0f) SetTint(Color.white);
             }
-            else if (_flashLeft > 0f)
-            {
-                _flashLeft -= Time.deltaTime;
-                if (_flashLeft <= 0f) SetTint(Color.white);
-            }
 
             bool busy = _walker != null && _walker.IsAttacking;
             if (Input.GetKeyDown(KeyCode.J) && !busy && _cooldownLeft <= 0f) Attack();
@@ -127,10 +121,6 @@ namespace XianXia.World
                 bool invert = FlipOddHits && (hit % 2) == 1;
                 _walker.PlayAttack(start, FramesPerHit, invert);
             }
-
-            // 出招的一点视觉反馈（偏冷，和挨打的红色区分开）
-            SetTint(new Color(0.75f, 0.88f, 1f));
-            _flashLeft = 0.08f;
 
             // 最后一段是收招，伤害更高
             _pendingDamageMul = (hit == ComboHits - 1) ? LastHitDamageMul : 1f;
@@ -230,7 +220,6 @@ namespace XianXia.World
 
             _invulnLeft = InvulnerableTime;
             SetTint(new Color(1f, 0.4f, 0.4f));
-            _flashLeft = -1f;
 
             int actual = ReduceIncoming(amount);
 

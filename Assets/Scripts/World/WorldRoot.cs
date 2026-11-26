@@ -80,6 +80,7 @@ namespace XianXia.World
             BuildBackdrop();
             BuildPlayer(worldPos ?? data.Spawn);
             BuildEnemies();
+            BuildPhotoGirl();
             BuildInteractables();
             SetupCamera();
 
@@ -234,7 +235,9 @@ namespace XianXia.World
                 var go = new GameObject("Enemy_" + spawn.id);
                 go.transform.SetParent(_container.transform, false);
                 go.transform.position = new Vector3(world.x, world.y, 0f);
-                go.transform.localScale = Vector3.one * PixelArtSettings.CharacterScale;
+                float scale = PixelArtSettings.CharacterScale;
+                if (def.id == "beast" || def.id == "elite") scale *= 0.7f;
+                go.transform.localScale = Vector3.one * scale;
 
                 var enemy = go.AddComponent<Enemy>();
                 enemy.SpawnId = spawn.id;
@@ -304,6 +307,28 @@ namespace XianXia.World
                 drop.Init(material ? Drop.DropKind.Material : Drop.DropKind.Resonance,
                           1, PlayerTransform, Random.Range(0f, 6.28f));
             }
+        }
+
+        void BuildPhotoGirl()
+        {
+            if (Scene.Id != "overworld") return;
+
+            var sprite = LoadSprite("npc_photo_girl");
+            if (sprite == null) return;
+
+            // 市区售货机左侧的人行道；坐标按场景原图的脚底位置填写。
+            var world = Scene.ImageToWorld(672, 310);
+            var npc = new GameObject("拍照女");
+            npc.transform.SetParent(_container.transform, false);
+            npc.transform.position = new Vector3(world.x, world.y, 0f);
+            npc.transform.localScale = Vector3.one * PixelArtSettings.CharacterScale;
+
+            var body = new GameObject("Body");
+            body.transform.SetParent(npc.transform, false);
+            body.transform.localPosition = new Vector3(0f, sprite.bounds.size.y * 0.5f, 0f);
+            var renderer = body.AddComponent<SpriteRenderer>();
+            renderer.sprite = sprite;
+            renderer.sortingOrder = 9;
         }
 
         void BuildInteractables()

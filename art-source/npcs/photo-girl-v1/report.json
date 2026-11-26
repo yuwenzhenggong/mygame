@@ -1,0 +1,39 @@
+{
+  "source_sha256": "c81ae7a3ea4ac74cbf99da3f0e905efa78fded2b35cac2ad9407c79c38d08b99",
+  "sprite_sha256": "d06bbcf454c10a360fab5197a35c53c6639befb6a964dc41086e52f6da792eae",
+  "source_character_bounds": [
+    335,
+    150,
+    929,
+    1112
+  ],
+  "source_crop": [
+    271,
+    150,
+    993,
+    1112
+  ],
+  "canvas": [
+    48,
+    64
+  ],
+  "removed_detached_pixels": 0,
+  "name": "拍照女",
+  "scene": "overworld",
+  "feet_image_position": [
+    672,
+    310
+  ],
+  "pixels_per_unit": 32,
+  "character_scale": 1.5,
+  "feet_area_walkable": true,
+  "preview_type": "Offline composition",
+  "installed": true,
+  "installed_resource": "Art/npc_photo_girl",
+  "sprite_guid": "8ed9e4a23637479eaa885702c19289a6",
+  "runtime_compile_exit_code": 0,
+  "unity_start_exit_code": 1,
+  "unity_runtime_verified": false,
+  "unity_error": "No valid Unity Editor license found. Please activate your license.",
+  "unity_log": "C:/Users/35226/AppData/Local/Temp/mygame-photo-girl-unity.log"
+}

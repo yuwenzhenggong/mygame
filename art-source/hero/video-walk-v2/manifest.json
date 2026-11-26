@@ -1,0 +1,51 @@
+{
+  "source": "../video-walk-v1/source.mp4",
+  "source_sha256": "a0cdb48f6993706d922ee87435276c38a57924a0b697cfdfb9336cc7aef51f13",
+  "source_fps": 24,
+  "source_cycle": [
+    88,
+    108
+  ],
+  "unique_source_frames": 20,
+  "output_frames": 24,
+  "interpolation": "FFmpeg motion compensated AOBMC, bidirectional, cyclic context",
+  "resampled_source_positions": [
+    88.0,
+    88.83333333333333,
+    89.66666666666667,
+    90.5,
+    91.33333333333333,
+    92.16666666666667,
+    93.0,
+    93.83333333333333,
+    94.66666666666667,
+    95.5,
+    96.33333333333333,
+    97.16666666666667,
+    98.0,
+    98.83333333333333,
+    99.66666666666667,
+    100.5,
+    101.33333333333333,
+    102.16666666666667,
+    103.0,
+    103.83333333333333,
+    104.66666666666667,
+    105.5,
+    106.33333333333333,
+    107.16666666666667
+  ],
+  "duration_per_frame": 0.035,
+  "cycle_seconds": 0.84,
+  "canvas": [
+    48,
+    64
+  ],
+  "common_source_crop": [
+    162,
+    93,
+    558,
+    621
+  ],
+  "pixels_per_unit": 32
+}

@@ -1,0 +1,8 @@
+{
+  "Assets\\Resources\\Art\\hero_front.png": "67540d1cd781488fa9822db470ed9ad575c6faa05873b9f3f9c05ebf5cd29c83",
+  "Assets\\Resources\\Art\\enemy_attacker.png": "53ae6a2cbafc960e23b649882d232c953643afe0d5bfa56a470286999d264319",
+  "Assets\\Resources\\Art\\enemy_beast.png": "4bc061daa3eec07e8df88fdc25ca9ed17f69c0c47d8cdbf24edbe6fe01842b30",
+  "Assets\\Resources\\Art\\enemy_elite.png": "169d075137e43e9f0e71b6ae934610cd1ccc38a0745f53dc103500ca717a28db",
+  "Assets\\Resources\\Data\\enemies.json": "308e3066c4666480cd82a7059381411067cd89796a7e1f32f122ee6a7db5a7c5",
+  "Assets\\Scripts\\World\\Enemy.cs": "d3918228c165c55b2c0a5ba3f1acf30b8fc152329c321866499add350393b4f2"
+}

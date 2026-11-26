@@ -1,0 +1,168 @@
+{
+  "passed": true,
+  "frames": [
+    {
+      "name": "hero_run_down_0.png",
+      "sha256": "7bea56f0e9121647deaae10cf8756bffab938d2826ec1dd3578c234aeb850c39",
+      "bounds": [
+        4,
+        0,
+        44,
+        64
+      ],
+      "visible_pixels": 1489,
+      "maximum_green_excess": 2
+    },
+    {
+      "name": "hero_run_down_1.png",
+      "sha256": "0fd989f0255bc41afdfc6c6fd01f7e1361d6a0e499751677989523a43e21074e",
+      "bounds": [
+        4,
+        0,
+        44,
+        64
+      ],
+      "visible_pixels": 1472,
+      "maximum_green_excess": 0
+    },
+    {
+      "name": "hero_run_down_2.png",
+      "sha256": "0aade0e4a6fc17868bb4676d3495188257cbfe63362e254de0c68c653840b2d2",
+      "bounds": [
+        4,
+        0,
+        44,
+        64
+      ],
+      "visible_pixels": 1480,
+      "maximum_green_excess": 1
+    },
+    {
+      "name": "hero_run_down_3.png",
+      "sha256": "b0dc72edbb87d5f215de892ec5f75b0a74f880d687d9bb3822bc9394a3245276",
+      "bounds": [
+        4,
+        1,
+        44,
+        64
+      ],
+      "visible_pixels": 1477,
+      "maximum_green_excess": 1
+    },
+    {
+      "name": "hero_run_down_4.png",
+      "sha256": "482a1b102891259807dcb1292a61c81f391e10b057e7ce7d64c28dad9b54e568",
+      "bounds": [
+        4,
+        0,
+        44,
+        64
+      ],
+      "visible_pixels": 1521,
+      "maximum_green_excess": 2
+    },
+    {
+      "name": "hero_run_down_5.png",
+      "sha256": "b8ecf7e99f51ef9755fdad5628232466c4d4cb9704e5dfafb020c9e9638a7152",
+      "bounds": [
+        4,
+        0,
+        44,
+        64
+      ],
+      "visible_pixels": 1513,
+      "maximum_green_excess": 1
+    },
+    {
+      "name": "hero_run_down_6.png",
+      "sha256": "490615eb7b0b5e0de50ccc124e1817f1647654e85e0292197c3e557eff1ffa6b",
+      "bounds": [
+        4,
+        0,
+        44,
+        64
+      ],
+      "visible_pixels": 1506,
+      "maximum_green_excess": 2
+    },
+    {
+      "name": "hero_run_down_7.png",
+      "sha256": "a3dc89600effc72a63c82e064e5477c976bda7d0ddbb7ae7be5b0ad16b207220",
+      "bounds": [
+        4,
+        0,
+        44,
+        64
+      ],
+      "visible_pixels": 1508,
+      "maximum_green_excess": 1
+    },
+    {
+      "name": "hero_run_down_8.png",
+      "sha256": "da813fcda5606dea2e2b17b8a5498d18dc43ed2ce7ee9ff728dbb66dcfbf211e",
+      "bounds": [
+        4,
+        0,
+        45,
+        64
+      ],
+      "visible_pixels": 1503,
+      "maximum_green_excess": 0
+    },
+    {
+      "name": "hero_run_down_9.png",
+      "sha256": "cf2bf9ae54fc15339316c85f101f4373e90d2d02ce9694b17731622cf13687bb",
+      "bounds": [
+        4,
+        0,
+        45,
+        64
+      ],
+      "visible_pixels": 1493,
+      "maximum_green_excess": 0
+    },
+    {
+      "name": "hero_run_down_10.png",
+      "sha256": "afa3f5a222129c68e6c4aa7a74fd0dc2e16651321ce2c659a6b11637b41142e7",
+      "bounds": [
+        4,
+        0,
+        45,
+        64
+      ],
+      "visible_pixels": 1507,
+      "maximum_green_excess": 1
+    },
+    {
+      "name": "hero_run_down_11.png",
+      "sha256": "d8573ee4c0fee9fe7f120f3ddcec2b6aec78284343debfd375b35c8276f94b6c",
+      "bounds": [
+        4,
+        0,
+        44,
+        64
+      ],
+      "visible_pixels": 1493,
+      "maximum_green_excess": 2
+    }
+  ],
+  "adjacent_frame_mean_difference": [
+    8.728597005208334,
+    2.2019856770833335,
+    4.528483072916667,
+    11.859375,
+    2.1405436197916665,
+    8.520833333333334,
+    3.3091634114583335,
+    2.576904296875,
+    6.010416666666667,
+    8.586832682291666,
+    10.301350911458334,
+    1.9163411458333333
+  ],
+  "idle_and_attack_unchanged": true,
+  "original_guids_preserved": true,
+  "cycle_seconds": 0.84,
+  "demonstration": "Offline asset composite, not engine footage",
+  "unity_runtime_verified": false
+}
